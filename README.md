@@ -1,1 +1,1 @@
-# Mini Gabor-based Image Classifiers #
+# Gabor-Optimized Image Classifiers #
