@@ -1,9 +1,13 @@
-import re
-from skimage.io import imread
-from skimage.transform import resize
-from skimage.feature import hog
-from skimage.filters import gabor_kernel
+import pandas as pd
 import numpy as np
+from skimage.util import img_as_float
+from skimage.filters import gabor_kernel
+from skimage import data, io, filters
+from scipy import ndimage as ndi
+from skimage.color import rgb2gray
+from skimage.feature import hog
+
+
 from .params import OPTION_DELETE, OPTION_GROUP, OPTION_NONE
 
 
@@ -15,6 +19,7 @@ class Features:
     def __init__(self, docs, gabor, resize=(270, 270), **kwargs):
         self.gabor = gabor
         self.resize = resize
+
 
     def __getitem__(self, filename):
         img = imread(filename, as_grey=True)
