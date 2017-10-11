@@ -88,7 +88,7 @@ class PowerGridVariable:
         m = randint(1, self.max_enabled+1)
         for i in range(m):
             L.append((randint(0, self.nrows),
-                      randint(1, self.ncols)))
+                      randint(0, self.ncols)))
 
         return L
 
@@ -110,7 +110,11 @@ class PowerGridVariable:
             if col + 1 < self.ncols:
                 conf = list(value)
                 conf[i] = (row, col + 1)
-                yield sorted(list(conf))
+                yield sorted(set(conf))
+             
+            conf = list(value)
+            conf.pop(i)
+            yield conf
 
 
 OPTION_NONE = 'none'
@@ -138,7 +142,8 @@ def Boolean():
 
 
 DefaultParams = {
-    "gabor": PowerGridVariable(3, 5, 8)
+    "gabor": PowerGridVariable(3, 5, 8),
+    "resize": Fixed((270, 270))
 }
 
 
@@ -161,19 +166,19 @@ class ParameterSelection:
         if keywords is None:
             keywords = set(s.keys())
 
-            for k, v in sorted(s.items()):
-                if k[0] == '_' or k not in keywords:
-                    # by convention, metadata starts with underscore
-                    continue
+        for k, v in sorted(s.items()):
+            if k[0] == '_' or k not in keywords:
+                # by convention, metadata starts with underscore
+                continue
 
-                vtype = self.params[k]
-                if isinstance(vtype, Fixed):
-                    continue
+            vtype = self.params[k]
+            if isinstance(vtype, Fixed):
+                continue
 
-                for neighbor in vtype.neighborhood(v):
-                    x = s.copy()
-                    x[k] = neighbor
-                    yield(x)
+            for neighbor in vtype.neighborhood(v):
+                x = s.copy()
+                x[k] = neighbor
+                yield(x)
 
     def get_best(self, fun_score, cand, desc="searching for params", pool=None):
         if pool is None:
@@ -227,13 +232,13 @@ class ParameterSelection:
                 best_list.sort(key=lambda x: x['_score'], reverse=True)
                 if bscore == best_list[0]['_score']:
                     break
-
-            if hill_climbing:
-                _hill_climbing()
-                _hill_climbing(None, "hill climbing optimization")
-
-            return best_list
+                
+        if hill_climbing:
+            _hill_climbing()
+            _hill_climbing(None, "hill climbing optimization")
+                
+        return best_list
 
 
 def _identifier(conf):
-    return ",".join(map(str, conf))
+    return ",".join(map(str, conf.items()))

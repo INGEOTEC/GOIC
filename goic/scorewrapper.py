@@ -101,7 +101,7 @@ class ScoreSampleWrapper(object):
             conf['_' + self.score] = sum(klist) / len(klist)
 
         conf['_score'] = conf['_' + self.score]
-        # print(conf)
+        print(conf)
 
 class ScoreKFoldWrapper(ScoreSampleWrapper):
     def __init__(self, X, y, Xstatic=[], ystatic=[], nfolds=5, score='macrof1', classifier=ClassifierWrapper, random_state=None):
