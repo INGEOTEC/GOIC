@@ -136,9 +136,9 @@ def Normal(mean, sigma, k=10):
 def Boolean():
     return SetVariable([False, True])
 
-import .features import Features
+
 DefaultParams = {
-    "gabor": PowerGridVariable(10, len(Features.FREQ), len(Features.THETA))
+    "gabor": PowerGridVariable(10, 5, 8)
 }
 
 
