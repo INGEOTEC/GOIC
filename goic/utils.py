@@ -37,7 +37,7 @@ def item_iterator(filename):
         yield json.loads(line)
 
 
-NAME = os.environ.get("name", 'name')
+NAME = os.environ.get("name", 'filename')
 KLASS = os.environ.get("klass", 'klass')
 
 
