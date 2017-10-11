@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from skimage.util import img_as_float
 from skimage.filters import gabor_kernel
+from skimage.transform import resize
 from skimage import data, io, filters
 from scipy import ndimage as ndi
 from skimage.color import rgb2gray
@@ -45,12 +46,13 @@ def compute_feats(image, kernels):
         results.append(filtered)
     return results
 
-def get_vector(lista_config, path_file, kernels):
+def get_vector(lista_config, path_file, kernels, size):
     #kernels = generacion_kernels()
     #Tomo los indices de la configuracion
     indices = convertir_bi_uni(lista_config)
     k = kernels_subset(kernels, indices)
     imagen = io.imread(path_file)
+    imagen = resize(imagen, size, mode='edge')
     img_gray = rgb2gray(imagen)
     #rezise de la imagen?
     img = img_as_float(img_gray)
@@ -58,15 +60,16 @@ def get_vector(lista_config, path_file, kernels):
     #Se calcula la Gabor image para cada filtro especificado
     GG = compute_feats(img, k)
     #Una vez calculadas las imagenes sacamos el HOG
-    h_Gabor = hog(GG[0], orientations=8, pixels_per_cell=(64, 64), cells_per_block=(2, 2))
+    h_Gabor = hog(GG[0], orientations=8, pixels_per_cell=(64, 64), cells_per_block=(2, 2), block_norm='L2-Hys')
     return(h_Gabor)
 
-def get_vector_combinacion(lista_config, path_file, kernels):
+def get_vector_combinacion(lista_config, path_file, kernels, size):
     #kernels = generacion_kernels()
     #Tomo los indices de la configuracion
     indices = convertir_bi_uni(lista_config)
     k = kernels_subset(kernels, indices)
     imagen = io.imread(path_file)
+    imagen = resize(imagen, size, mode='edge')
     img_gray = rgb2gray(imagen)
     #rezise de la imagen?
     img = img_as_float(img_gray)
@@ -75,7 +78,8 @@ def get_vector_combinacion(lista_config, path_file, kernels):
     GG = compute_feats(img, k)
     sumG = suma_imagenes(GG)
     #Una vez calculadas las imagenes sacamos el HOG
-    h_Gabor = hog(sumG, orientations=8, pixels_per_cell=(64, 64), cells_per_block=(2, 2))
+    h_Gabor = hog(sumG, orientations=8, pixels_per_cell=(64, 64), cells_per_block=(2, 2), block_norm='L2-Hys')
+    print(type(h_Gabor), h_Gabor.shape, file=sys.stderr)
     return(h_Gabor)
 
 @jit
@@ -102,7 +106,8 @@ class Features:
         #img = resize(img, self.size, mode='edge')
         print("==== processing", filename, ", gabor: ", self.gabor, ", resize: ",  self.resize, file=sys.stderr)
         if(len(self.gabor)) > 1:
-            vec = get_vector(self.gabor, filename, self.kernels)
+            vec = get_vector_combinacion(self.gabor, filename, self.kernels, self.resize)
         else:
-            vec = get_vector_combinacion(self.gabor, filename, self.kernels)
+            vec = get_vector(self.gabor, filename, self.kernels, self.resize)
+
         return(vec)
