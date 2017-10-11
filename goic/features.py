@@ -84,13 +84,16 @@ def get_vector_combinacion(lista_config, path_file, kernels, size):
 
 @jit
 def suma_imagenes(lista_imgs):
-    d = len(lista_imgs)
+    # d = len(lista_imgs)
 
     size = lista_imgs[0].shape
     r = np.zeros(size)
 
-    for k in range(0,d):
-        r += lista_imgs[k]
+    for x in lista_imgs:
+        r += x
+
+    #for k in range(0,d):
+    #    r += lista_imgs[k]
 
         # for i in range(0,size[0]):
         #     for j in range(0, size[1]):
