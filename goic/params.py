@@ -90,7 +90,7 @@ class PowerGridVariable:
             L.append((randint(0, self.nrows),
                       randint(0, self.ncols)))
 
-        return L
+        return list(set(L))
 
     def neighborhood(self, value):
         for i in range(len(value)):
@@ -142,7 +142,7 @@ def Boolean():
 
 
 DefaultParams = {
-    "gabor": PowerGridVariable(3, 5, 8),
+    "gabor": PowerGridVariable(7, 5, 8),
     "resize": Fixed((270, 270))
 }
 
@@ -196,7 +196,6 @@ class ParameterSelection:
         # initial approximation, montecarlo based procesess
 
         tabu = set()  # memory for tabu search
-
         if best_list is None:
             L = []
             for conf in self.sample_param_space(bsize):
@@ -212,6 +211,7 @@ class ParameterSelection:
             for conf in best_list:
                 tabu.add(_identifier(conf))
 
+         
         def _hill_climbing(keywords, desc):
             # second approximation, a hill climbing process
             i = 0
@@ -234,7 +234,6 @@ class ParameterSelection:
                     break
                 
         if hill_climbing:
-            _hill_climbing()
             _hill_climbing(None, "hill climbing optimization")
                 
         return best_list

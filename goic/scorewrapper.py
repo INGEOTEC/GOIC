@@ -15,6 +15,7 @@
 
 import numpy as np
 import os
+import sys
 from time import time
 from sklearn.metrics import f1_score, accuracy_score, recall_score, precision_score
 from sklearn import preprocessing
@@ -52,6 +53,7 @@ class ScoreSampleWrapper(object):
 
     def __call__(self, conf_code):
         conf, code = conf_code
+        print("testing ", conf, file=sys.stderr)
         st = time()
         model_klass = os.environ.get("klasses", None)
 
@@ -69,6 +71,7 @@ class ScoreSampleWrapper(object):
         pred_y = c.predict(test_X)
         self.compute_score(conf, pred_y)
         conf['_time'] = (time() - st)
+        print("finished ", conf, file=sys.stderr)
         return conf
 
     def compute_score(self, conf, hy):
