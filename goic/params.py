@@ -138,7 +138,7 @@ def Boolean():
 
 
 DefaultParams = {
-    "gabor": PowerGridVariable(10, 5, 8)
+    "gabor": PowerGridVariable(3, 5, 8)
 }
 
 

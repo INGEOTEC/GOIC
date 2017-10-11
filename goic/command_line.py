@@ -286,7 +286,7 @@ class CommandLineTextModel(CommandLinePredict):
         with open(self.get_output(), 'w') as fpt:
             for tw in item_iterator(self.data.test_set):
                 tw["vec"] = model[tw[NAME]]
-                tw["vecsize"] = svc.num_terms
+                # tw["vecsize"] = svc.num_terms
                 L.append(tw)
                 print(json.dumps(tw), file=fpt)
 
