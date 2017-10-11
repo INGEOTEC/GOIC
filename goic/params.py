@@ -22,10 +22,10 @@ class Fixed:
     def __init__(self, value):
         self.value = value
         self.valid_values = [value]
-    
+
     def neighborhood(self, v):
         return []
-    
+
     def get_random(self):
         return self.value
 
@@ -33,10 +33,10 @@ class Fixed:
 class SetVariable:
     def __init__(self, values):
         self.valid_values = list(values)
-    
+
     def neighborhood(self, value):
         return [u for u in self.valid_values if u != value]
-    
+
     def get_random(self):
         i = randint(len(self.valid_values))
         return self.valid_values[i]
@@ -47,34 +47,34 @@ class PowersetVariable:
         self.valid_values = []
         if max_size is None:
             max_size = len(initial_set) // 2 + 1
-        
+
         for i in range(1, len(initial_set)+1):
             for l in combinations(initial_set, i):
                 if len(l) <= max_size:
                     self.valid_values.append(l)
 
-def mismatches(self, value):
-    lvalue = len(value)
+    def mismatches(self, value):
+        lvalue = len(value)
         for v in self.valid_values:
             # if len(value.intersection(v)) == lvalue - 1 or len(value.union(v)) == lvalue + 1:
             ulen = len(value.union(v))
             ilen = len(value.intersection(v))
             if ulen in (lvalue, lvalue + 1) and ilen in (lvalue, lvalue - 1):
                 yield v
-                    
-                    def neighborhood(self, value):
-                        L = []
-                            for v in value:
-                                if isinstance(v, list):
-                                    v = tuple(v)
-                                        L.append(v)
-                                            
-                                            return list(self.mismatches(set(L)))
-                                                
-                                                def get_random(self):
-                                                    x = len(self.valid_values)
-                                                        i = randint(x)
-                                                            return self.valid_values[i]
+
+    def neighborhood(self, value):
+        L = []
+        for v in value:
+            if isinstance(v, list):
+                v = tuple(v)
+            L.append(v)
+
+        return list(self.mismatches(set(L)))
+
+    def get_random(self):
+        x = len(self.valid_values)
+        i = randint(x)
+        return self.valid_values[i]
 
 
 class PowerGridVariable:
@@ -82,16 +82,16 @@ class PowerGridVariable:
         self.nrows = nrows
         self.ncols = ncols
         self.max_enabled = max_enabled
-    
+
     def get_random(self):
         L = []
         m = randint(1, self.max_enabled+1)
         for i in range(m):
             L.append((randint(0, self.nrows),
                       randint(1, self.ncols)))
-        
+
         return L
-    
+
     def neighborhood(self, value):
         for i in range(len(value)):
             row, col = value[i]
@@ -146,30 +146,30 @@ class ParameterSelection:
     def __init__(self, params=None):
         if params is None:
             params = DefaultParams
-        
+
         self.params = params
-    
+
     def sample_param_space(self, n):
         for i in range(n):
             kwargs = {}
             for k, v in self.params.items():
                 kwargs[k] = v.get_random()
-            
+
             yield kwargs
 
 def expand_neighbors(self, s, keywords=None):
     if keywords is None:
         keywords = set(s.keys())
-        
+
         for k, v in sorted(s.items()):
             if k[0] == '_' or k not in keywords:
                 # by convention, metadata starts with underscore
                 continue
-            
+
             vtype = self.params[k]
             if isinstance(vtype, Fixed):
                 continue
-            
+
             for neighbor in vtype.neighborhood(v):
                 x = s.copy()
                 x[k] = neighbor
@@ -179,60 +179,60 @@ def get_best(self, fun_score, cand, desc="searching for params", pool=None):
     if pool is None:
         # X = list(map(fun_score, cand))
         X = [fun_score(x) for x in tqdm(cand, desc=desc, total=len(cand))]
-        else:
-            # X = list(pool.map(fun_score, cand))
-            X = [x for x in tqdm(pool.imap_unordered(fun_score, cand), desc=desc, total=len(cand))]
+    else:
+        # X = list(pool.map(fun_score, cand))
+        X = [x for x in tqdm(pool.imap_unordered(fun_score, cand), desc=desc, total=len(cand))]
 
     # a list of tuples (score, conf)
     X.sort(key=lambda x: x['_score'], reverse=True)
-        return X
+    return X
 
 def search(self, fun_score, bsize=32, hill_climbing=True, pool=None, best_list=None):
     # initial approximation, montecarlo based procesess
-    
+
     tabu = set()  # memory for tabu search
-        
-        if best_list is None:
-            L = []
-            for conf in self.sample_param_space(bsize):
-                code = _identifier(conf)
-                if code in tabu:
-                    continue
-                
-                tabu.add(code)
-                L.append((conf, code))
-            
-            best_list = self.get_best(fun_score, L, pool=pool)
-        else:
-            for conf in best_list:
-                tabu.add(_identifier(conf))
-    
+
+    if best_list is None:
+        L = []
+        for conf in self.sample_param_space(bsize):
+            code = _identifier(conf)
+            if code in tabu:
+                continue
+
+            tabu.add(code)
+            L.append((conf, code))
+
+        best_list = self.get_best(fun_score, L, pool=pool)
+    else:
+        for conf in best_list:
+            tabu.add(_identifier(conf))
+
     def _hill_climbing(keywords, desc):
         # second approximation, a hill climbing process
         i = 0
-            while True:
-                i += 1
-                bscore = best_list[0]['_score']
-                L = []
-                
-                for conf in self.expand_neighbors(best_list[0], keywords=keywords):
-                    code = _identifier(conf)
-                    if code in tabu:
-                        continue
-                    
-                    tabu.add(code)
-                    L.append((conf, code))
-                
-                best_list.extend(self.get_best(fun_score, L, desc=desc + " {0}".format(i), pool=pool))
-                best_list.sort(key=lambda x: x['_score'], reverse=True)
-                if bscore == best_list[0]['_score']:
-                    break
-        
+        while True:
+            i += 1
+            bscore = best_list[0]['_score']
+            L = []
+
+            for conf in self.expand_neighbors(best_list[0], keywords=keywords):
+                code = _identifier(conf)
+                if code in tabu:
+                    continue
+
+                tabu.add(code)
+                L.append((conf, code))
+
+            best_list.extend(self.get_best(fun_score, L, desc=desc + " {0}".format(i), pool=pool))
+            best_list.sort(key=lambda x: x['_score'], reverse=True)
+            if bscore == best_list[0]['_score']:
+                break
+
         if hill_climbing:
             _hill_climbing()
             _hill_climbing(None, "hill climbing optimization")
 
-return best_list
+        return best_list
 
 
 def _identifier(conf):

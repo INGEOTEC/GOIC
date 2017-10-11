@@ -1,6 +1,6 @@
 #!/opt/anaconda/bin/python
 
-from goic.utils import tweet_iterator
+from goic.utils import item_iterator
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
 from sklearn.metrics import cohen_kappa_score
@@ -8,13 +8,13 @@ import json
 import os
 import sys
 
-KLASS=os.environ.get('KLASS', 'klass')
+KLASS=os.environ.get('klass', 'klass')
 
 
 def show_mismatches(gold, predicted, output=None, avgf1=None):
     i = 0
     klass = os.environ.get(KLASS)
-    for g, p in zip(tweet_iterator(gold), tweet_iterator(predicted)):
+    for g, p in zip(item_iterator(gold), item_iterator(predicted)):
         g[KLASS] = str(g[KLASS])
         p[KLASS] = str(p[KLASS])
         i += 1
@@ -24,11 +24,11 @@ def show_mismatches(gold, predicted, output=None, avgf1=None):
 
 
 def performance(gold, predicted, output=None, avgf1=None):
-    y = [str(tweet[KLASS]) for tweet in tweet_iterator(gold)]
+    y = [str(tweet[KLASS]) for tweet in item_iterator(gold)]
     le = LabelEncoder().fit(y)
     y = le.transform(y)
 
-    hy = [str(tweet[KLASS]) for tweet in tweet_iterator(predicted)]
+    hy = [str(tweet[KLASS]) for tweet in item_iterator(predicted)]
     hy = le.transform(hy)
     # with open(fname.replace('_output.json', '.params')) as fpt:
     #     a = json.load(fpt)

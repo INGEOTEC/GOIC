@@ -53,7 +53,7 @@ class ScoreSampleWrapper(object):
     def __call__(self, conf_code):
         conf, code = conf_code
         st = time()
-        model_klass = os.environ.get("KLASSES", None)
+        model_klass = os.environ.get("klasses", None)
 
         if model_klass:
             model_klass = self.le.transform(model_klass.split(','))

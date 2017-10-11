@@ -3,11 +3,11 @@ import logging
 import goic
 import gzip
 from goic.classifier import ClassifierWrapper
-from goic.utils import read_data, tweet_iterator
+from goic.utils import read_data, item_iterator
 from multiprocessing import cpu_count, Pool
 from .params import ParameterSelection, OPTION_NONE
 from .scorewrapper import ScoreKFoldWrapper, ScoreSampleWrapper
-from .utils import read_data_labels
+from .utils import read_data_labels, NAME, KLASS
 from .features import Features
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import KFold
@@ -197,7 +197,7 @@ class CommandLineTrain(CommandLine):
             le.fit(labels)
 
         y = le.transform(labels)
-        model_klasses = os.environ.get('KLASSES')
+        model_klasses = os.environ.get('klasses')
 
         best.setdefault('dist_vector', OPTION_NONE)
         if model_klasses:
@@ -263,8 +263,8 @@ class CommandLinePredict(CommandLine):
         L = []
         hy = svc.decision_function(veclist)
         hyy = le.inverse_transform(svc.predict(veclist))
-        KLASS = os.environ.get('KLASS', 'klass')
-        for tweet, scores, klass, aff in zip(tweet_iterator(self.data.test_set), hy, hyy, afflist):
+
+        for tweet, scores, klass, aff in zip(item_iterator(self.data.test_set), hy, hyy, afflist):
             # klass = le.inverse_transform(svc.svc.classes_[index])
             tweet['decision_function'] = scores.tolist()
             tweet['voc_affinity'] = aff
@@ -281,11 +281,11 @@ class CommandLineTextModel(CommandLinePredict):
     def main(self):
         self.data = self.parser.parse_args()
         logging.basicConfig(level=self.data.verbose)
-        textmodel, svc, le = load_pickle(self.data.model)
+        model, svc, le = load_pickle(self.data.model)
         L = []
         with open(self.get_output(), 'w') as fpt:
-            for tw in tweet_iterator(self.data.test_set):
-                tw["vec"] = textmodel[tw['text']]
+            for tw in item_iterator(self.data.test_set):
+                tw["vec"] = model[tw[NAME]]
                 tw["vecsize"] = svc.num_terms
                 L.append(tw)
                 print(json.dumps(tw), file=fpt)
@@ -328,7 +328,7 @@ class CommandLineKfolds(CommandLineTrain):
             le.fit(labels)
 
         y = le.transform(labels)
-        model_klasses = os.environ.get('KLASSES')
+        model_klasses = os.environ.get('klasses')
 
         if model_klasses:
             model_klasses = le.transform(model_klasses.split(','))
@@ -355,7 +355,7 @@ class CommandLineKfolds(CommandLineTrain):
         i = 0
         with open(self.get_output(), 'w') as fpt:
             for train in self.data.training_set:
-                for tweet in tweet_iterator(train):
+                for tweet in item_iterator(train):
                     tweet['decision_function'] = hy[i].tolist()
                     i += 1
                     fpt.write(json.dumps(tweet)+"\n")

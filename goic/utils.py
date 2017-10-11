@@ -32,41 +32,41 @@ def line_iterator(filename):
     f.close()
 
 
-def tweet_iterator(filename):
+def item_iterator(filename):
     for line in line_iterator(filename):
         yield json.loads(line)
 
 
-TEXT = os.environ.get("TEXT", 'text')
-KLASS = os.environ.get("KLASS", 'klass')
+NAME = os.environ.get("name", 'name')
+KLASS = os.environ.get("klass", 'klass')
 
 
-def read_data_labels(filename, get_tweet=TEXT,
+def read_data_labels(filename, get_name=NAME,
                      get_klass=KLASS, maxitems=1e100):
     data, labels = [], []
     count = 0
-    for tweet in tweet_iterator(filename):
+    for item in item_iterator(filename):
         count += 1
         try:
-            x = get_tweet(tweet) if callable(get_tweet) else tweet[get_tweet]
-            y = get_klass(tweet) if callable(get_klass) else tweet[get_klass]
+            x = get_name(item) if callable(get_name) else item[get_name]
+            y = get_klass(item) if callable(get_klass) else item[get_klass]
             data.append(x)
             labels.append(str(y))
             if count == maxitems:
                 break
         except KeyError as e:
-            logging.warn("error at line {0}, input: {1}".format(count, tweet))
+            logging.warn("error at line {0}, input: {1}".format(count, item))
             raise e
 
     return data, labels
 
 
-def read_data(filename, get_tweet=TEXT, maxitems=1e100):
+def read_data(filename, get_name=NAME, maxitems=1e100):
     data = []
     count = 0
-    for tweet in tweet_iterator(filename):
+    for item in item_iterator(filename):
         count += 1
-        x = get_tweet(tweet) if callable(get_tweet) else tweet[get_tweet]
+        x = get_name(item) if callable(get_name) else item[get_name]
         data.append(x)
         if count == maxitems:
             break
