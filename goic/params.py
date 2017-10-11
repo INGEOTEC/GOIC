@@ -111,7 +111,7 @@ class PowerGridVariable:
                 conf = list(value)
                 conf[i] = (row, col + 1)
                 yield sorted(set(conf))
-             
+
             conf = list(value)
             conf.pop(i)
             yield conf
@@ -143,7 +143,8 @@ def Boolean():
 
 DefaultParams = {
     "gabor": PowerGridVariable(7, 5, 8),
-    "resize": Fixed((270, 270))
+    "resize": Fixed((270, 270)),
+    "equalize": Boolean()
 }
 
 
@@ -211,7 +212,7 @@ class ParameterSelection:
             for conf in best_list:
                 tabu.add(_identifier(conf))
 
-         
+
         def _hill_climbing(keywords, desc):
             # second approximation, a hill climbing process
             i = 0
@@ -232,10 +233,10 @@ class ParameterSelection:
                 best_list.sort(key=lambda x: x['_score'], reverse=True)
                 if bscore == best_list[0]['_score']:
                     break
-                
+
         if hill_climbing:
             _hill_climbing(None, "hill climbing optimization")
-                
+
         return best_list
 
 

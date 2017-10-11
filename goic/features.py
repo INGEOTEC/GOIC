@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 from skimage.util import img_as_float
 from skimage.filters import gabor_kernel
@@ -57,14 +56,14 @@ def get_vector(lista_config, path_file, kernels, size, eq):
     #Tomo los indices de la configuracion
     indices = convertir_bi_uni(lista_config)
     k = kernels_subset(kernels, indices)
-    imagen = io.imread(path_file)
+    imagen = io.imread(path_file, as_grey=True)
     imagen = resize(imagen, size, mode='edge')
     if eq:
         imagen = exposure.equalize_hist(imagen)
 
-    img_gray = rgb2gray(imagen)
+    # img_gray = rgb2gray(imagen)
     #rezise de la imagen?
-    img = img_as_float(img_gray)
+    img = img_as_float(imagen)
     GG = []
     #Se calcula la Gabor image para cada filtro especificado
     GG = compute_feats(img, k)
@@ -78,14 +77,14 @@ def get_vector_combinacion(lista_config, path_file, kernels, size, eq):
     #Tomo los indices de la configuracion
     indices = convertir_bi_uni(lista_config)
     k = kernels_subset(kernels, indices)
-    imagen = io.imread(path_file)
+    imagen = io.imread(path_file, as_grey=True)
     imagen = resize(imagen, size, mode='edge')
     if eq:
         imagen = exposure.equalize_hist(imagen)
 
-    img_gray = rgb2gray(imagen)
+    # img_gray = rgb2gray(imagen)
     #rezise de la imagen?
-    img = img_as_float(img_gray)
+    img = img_as_float(imagen)
     GG = []
     #Se calcula la Gabor image para cada filtro especificado
     GG = compute_feats(img, k)
