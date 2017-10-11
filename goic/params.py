@@ -157,65 +157,44 @@ class ParameterSelection:
 
             yield kwargs
 
-def expand_neighbors(self, s, keywords=None):
-    if keywords is None:
-        keywords = set(s.keys())
+    def expand_neighbors(self, s, keywords=None):
+        if keywords is None:
+            keywords = set(s.keys())
 
-        for k, v in sorted(s.items()):
-            if k[0] == '_' or k not in keywords:
-                # by convention, metadata starts with underscore
-                continue
+            for k, v in sorted(s.items()):
+                if k[0] == '_' or k not in keywords:
+                    # by convention, metadata starts with underscore
+                    continue
 
-            vtype = self.params[k]
-            if isinstance(vtype, Fixed):
-                continue
+                vtype = self.params[k]
+                if isinstance(vtype, Fixed):
+                    continue
 
-            for neighbor in vtype.neighborhood(v):
-                x = s.copy()
-                x[k] = neighbor
-                yield(x)
+                for neighbor in vtype.neighborhood(v):
+                    x = s.copy()
+                    x[k] = neighbor
+                    yield(x)
 
-def get_best(self, fun_score, cand, desc="searching for params", pool=None):
-    if pool is None:
-        # X = list(map(fun_score, cand))
-        X = [fun_score(x) for x in tqdm(cand, desc=desc, total=len(cand))]
-    else:
-        # X = list(pool.map(fun_score, cand))
-        X = [x for x in tqdm(pool.imap_unordered(fun_score, cand), desc=desc, total=len(cand))]
+    def get_best(self, fun_score, cand, desc="searching for params", pool=None):
+        if pool is None:
+            # X = list(map(fun_score, cand))
+            X = [fun_score(x) for x in tqdm(cand, desc=desc, total=len(cand))]
+        else:
+            # X = list(pool.map(fun_score, cand))
+            X = [x for x in tqdm(pool.imap_unordered(fun_score, cand), desc=desc, total=len(cand))]
 
-    # a list of tuples (score, conf)
-    X.sort(key=lambda x: x['_score'], reverse=True)
-    return X
+        # a list of tuples (score, conf)
+        X.sort(key=lambda x: x['_score'], reverse=True)
+        return X
 
-def search(self, fun_score, bsize=32, hill_climbing=True, pool=None, best_list=None):
-    # initial approximation, montecarlo based procesess
+    def search(self, fun_score, bsize=32, hill_climbing=True, pool=None, best_list=None):
+        # initial approximation, montecarlo based procesess
 
-    tabu = set()  # memory for tabu search
+        tabu = set()  # memory for tabu search
 
-    if best_list is None:
-        L = []
-        for conf in self.sample_param_space(bsize):
-            code = _identifier(conf)
-            if code in tabu:
-                continue
-
-            tabu.add(code)
-            L.append((conf, code))
-
-        best_list = self.get_best(fun_score, L, pool=pool)
-    else:
-        for conf in best_list:
-            tabu.add(_identifier(conf))
-
-    def _hill_climbing(keywords, desc):
-        # second approximation, a hill climbing process
-        i = 0
-        while True:
-            i += 1
-            bscore = best_list[0]['_score']
+        if best_list is None:
             L = []
-
-            for conf in self.expand_neighbors(best_list[0], keywords=keywords):
+            for conf in self.sample_param_space(bsize):
                 code = _identifier(conf)
                 if code in tabu:
                     continue
@@ -223,16 +202,37 @@ def search(self, fun_score, bsize=32, hill_climbing=True, pool=None, best_list=N
                 tabu.add(code)
                 L.append((conf, code))
 
-            best_list.extend(self.get_best(fun_score, L, desc=desc + " {0}".format(i), pool=pool))
-            best_list.sort(key=lambda x: x['_score'], reverse=True)
-            if bscore == best_list[0]['_score']:
-                break
+            best_list = self.get_best(fun_score, L, pool=pool)
+        else:
+            for conf in best_list:
+                tabu.add(_identifier(conf))
 
-        if hill_climbing:
-            _hill_climbing()
-            _hill_climbing(None, "hill climbing optimization")
+        def _hill_climbing(keywords, desc):
+            # second approximation, a hill climbing process
+            i = 0
+            while True:
+                i += 1
+                bscore = best_list[0]['_score']
+                L = []
 
-        return best_list
+                for conf in self.expand_neighbors(best_list[0], keywords=keywords):
+                    code = _identifier(conf)
+                    if code in tabu:
+                        continue
+
+                    tabu.add(code)
+                    L.append((conf, code))
+
+                best_list.extend(self.get_best(fun_score, L, desc=desc + " {0}".format(i), pool=pool))
+                best_list.sort(key=lambda x: x['_score'], reverse=True)
+                if bscore == best_list[0]['_score']:
+                    break
+
+            if hill_climbing:
+                _hill_climbing()
+                _hill_climbing(None, "hill climbing optimization")
+
+            return best_list
 
 
 def _identifier(conf):
