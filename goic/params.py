@@ -86,9 +86,13 @@ class PowerGridVariable:
     def get_random(self):
         L = []
         m = randint(1, self.max_enabled+1)
+        if m == 0:
+            return [(0, 0)]
+
         for i in range(m):
             L.append((randint(0, self.nrows),
                       randint(0, self.ncols)))
+
 
         return list(set(L))
 
@@ -112,9 +116,10 @@ class PowerGridVariable:
                 conf[i] = (row, col + 1)
                 yield sorted(set(conf))
 
-            conf = list(value)
-            conf.pop(i)
-            yield conf
+            if len(value) > 1:
+                conf = list(value)
+                conf.pop(i)
+                yield conf
 
 
 OPTION_NONE = 'none'
