@@ -87,12 +87,14 @@ def suma_imagenes(lista_imgs):
     d = len(lista_imgs)
 
     size = lista_imgs[0].shape
-    r = np.zeros((size))
+    r = np.zeros(size)
 
     for k in range(0,d):
-        for i in range(0,size[0]):
-            for j in range(0, size[1]):
-                r[i][j] = r[i][j] + lista_imgs[k][i][j]
+        r += lista_imgs[k]
+
+        # for i in range(0,size[0]):
+        #     for j in range(0, size[1]):
+        #         r[i][j] = r[i][j] + lista_imgs[k][i][j]
     return(r)
 
 class Features:
