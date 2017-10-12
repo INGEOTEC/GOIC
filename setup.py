@@ -1,4 +1,4 @@
-+from setuptools import setup
+from setuptools import setup
 import goic
 
 
@@ -8,7 +8,7 @@ setup(
     name="goic",
     description="""A Minimal Gabor-based Image Classifier""",
     long_description=long_desc,
-    version=microtc.__version__,
+    version=goic.__version__,
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Environment :: Console",
@@ -24,7 +24,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     package_data={
-        'microtc/tests': ['text.json'],
+        'goic/tests': ['text.json'],
     },
     scripts=[
         'goic/tools/goic-train',
@@ -32,7 +32,6 @@ setup(
         'goic/tools/goic-params',
         'goic/tools/goic-model',
         'goic/tools/goic-perf',
-        'goic/tools/goic-ensemble',
         'goic/tools/goic-kfolds'
     ]
 )
