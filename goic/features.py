@@ -84,45 +84,14 @@ def get_vector(lista_config, path_file, obj):
     GG = []
     #Se calcula la Gabor image para cada filtro especificado
     GG = compute_feats(img, k)
-    #Una vez calculadas las imagenes sacamos el HOG
-    h_Gabor = hog(GG[0], orientations=8, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L2-Hys')
-    return(h_Gabor)
-
-@jit
-def get_vector_combinacion(lista_config, path_file, obj):
-    #Tomo los indices de la configuracion
-    indices = convertir_bi_uni(lista_config)
-    k = kernels_subset(obj.kernels, indices)
-    imagen = io.imread(path_file, as_grey=True)
-    imagen = resize(imagen, obj.resize, mode='edge')
-    if obj.equalize != 'none':
-        if obj.equalize == 'global':
-            imagen = exposure.equalize_hist(imagen)
-        else:
-            d = int(obj.equalize.split(':')[-1] or 30)
-            imagen = rank.equalize(imagen, selem=disk(d))
-
-
-    if obj.edges != 'none':
-        if obj.edges == 'sobel':
-            imagen = sobel(imagen)
-        elif obj.edges == 'scharr':
-            imagen = scharr(imagen)
-        elif obj.edges == 'prewitt':
-            imagen = prewitt(imagen)
-        elif obj.edges == 'roberts':
-            imagen = roberts(imagen)
-        else:
-            raise ArgumentException("Unknown edge detector {0}".format(obj.edges))
-
-    img = img_as_float(imagen)
-    GG = []
-    #Se calcula la Gabor image para cada filtro especificado
-    GG = compute_feats(img, k)
-    sumG = suma_imagenes(GG)
+    if(len(lista_config) == 0):
+        sumG = img
+    elif(len(lista_config) > 1):
+        sumG = suma_imagenes(GG)
+    else:
+        sumG = GG[0]
     #Una vez calculadas las imagenes sacamos el HOG
     h_Gabor = hog(sumG, orientations=8, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L2-Hys')
-    # print(type(h_Gabor), h_Gabor.shape, file=sys.stderr)
     return(h_Gabor)
 
 @jit
@@ -150,9 +119,7 @@ class Features:
         #img = imread(filename, as_grey=True)
         #img = resize(img, self.size, mode='edge')
         # print("==== processing", filename, ", gabor: ", self.gabor, ", resize: ",  self.resize, file=sys.stderr)
-        if(len(self.gabor)) > 1:
-            vec = get_vector_combinacion(self.gabor, filename, self)
-        else:
-            vec = get_vector(self.gabor, filename, self)
+
+        vec = get_vector(self.gabor, filename, self)
 
         return(vec)
