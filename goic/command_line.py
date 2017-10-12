@@ -176,7 +176,7 @@ class CommandLineTrain(CommandLine):
     def param_train(self):
         pa = self.parser.add_argument
         pa('-m', '--model-params', dest='params_fname', type=str, required=True,
-           help="TextModel params")
+           help="model params")
         pa('-i', '--i-th', dest='position', type=int, default=0,  # best by default
            help="i-th model in the set of configurations (defaults to the best, i.e., 0)")
         pa('-l', '--labels', dest='labels', type=str,
@@ -285,7 +285,7 @@ class CommandLinePredict(CommandLine):
         return L
 
 
-class CommandLineTextModel(CommandLinePredict):
+class CommandLineModel(CommandLinePredict):
     def main(self):
         self.data = self.parser.parse_args()
         logging.basicConfig(level=self.data.verbose)
@@ -385,8 +385,8 @@ def predict(*args, **kwargs):
     return c.main(*args, **kwargs)
 
 
-def textmodel(*args, **kwargs):
-    c = CommandLineTextModel()
+def model(*args, **kwargs):
+    c = CommandLineModel()
     return c.main(*args, **kwargs)
 
 

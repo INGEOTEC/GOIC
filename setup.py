@@ -1,4 +1,4 @@
-from setuptools import setup
++from setuptools import setup
 import goic
 
 
@@ -30,7 +30,7 @@ setup(
         'goic/tools/goic-train',
         'goic/tools/goic-predict',
         'goic/tools/goic-params',
-        'goic/tools/goic-textModel',
+        'goic/tools/goic-model',
         'goic/tools/goic-perf',
         'goic/tools/goic-ensemble',
         'goic/tools/goic-kfolds'
