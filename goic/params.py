@@ -148,8 +148,14 @@ def Boolean():
 
 DefaultParams = {
     "gabor": PowerGridVariable(7, 5, 8),
-    "resize": Fixed((270, 270)),
-    "equalize": Boolean()
+    # "resize": SetVariable([(320, 320), (380, 380), (270, 270), (420, 420)]),
+    "resize": Fixed((320, 320)),
+    "equalize": SetVariable(['none', 'local:30', 'global']),
+    # "edges": SetVariable(['none', 'scharr', 'sobel', 'prewitt', 'roberts']),
+    "edges": SetVariable(['none', 'scharr', 'sobel']),
+    "pixels_per_cell": SetVariable([(32, 32), (64, 64)]),
+    # "cells_per_block": SetVariable([(2, 2), (3, 3)])
+    "cells_per_block": Fixed((3, 3))
 }
 
 
