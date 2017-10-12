@@ -33,12 +33,15 @@ def kernels_subset(kernels, indices):
 
 def generacion_kernels():
     kernels = []  # Aquí se guardan los filtros que vamos a generar
-    thetas = frange(0,((7*np.pi)/8),pi/8)
-    for theta in thetas:
+    # thetas = frange(0,((7*np.pi)/8),pi/8)
+    theta = 0
+    while theta <= 7 * np.pi / 8:
+        # for theta in thetas:
         sigma = 2*np.pi
         for frequency in (0.10, 0.15, 0.20, 0.25, 0.35):
             kernel = np.real(gabor_kernel(frequency, theta=theta,sigma_x=sigma, sigma_y=sigma))
             kernels.append(kernel)
+        theta += np.pi / 8
     return kernels
 
 
