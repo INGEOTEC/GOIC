@@ -46,19 +46,23 @@ def generacion_kernels():
 
 
 def compute_feats(image, kernels):
-    feats = np.zeros((len(kernels), 2), dtype=np.double)
+    # feats = np.zeros((len(kernels), 2), dtype=np.double)
     results = []
     for k, kernel in enumerate(kernels):
         filtered = filter.convolve(image, kernel, mode='wrap')
         results.append(filtered)
+ 
     return results
 
+
 @jit
-def get_vector(lista_config, path_file, obj):
+def get_vector(obj, path_file):
     #Tomo los indices de la configuracion
-    indices = convertir_bi_uni(lista_config)
+    indices = convertir_bi_uni(obj.gabor)
     k = kernels_subset(obj.kernels, indices)
     imagen = io.imread(path_file, as_grey=True)
+    # imagen = io.imread(path_file)
+    # imagen = imagen[:,:,1]
     imagen = resize(imagen, obj.resize, mode='edge')
 
     if obj.equalize != 'none':
@@ -84,9 +88,9 @@ def get_vector(lista_config, path_file, obj):
     GG = []
     #Se calcula la Gabor image para cada filtro especificado
     GG = compute_feats(img, k)
-    if(len(lista_config) == 0):
+    if(len(obj.gabor) == 0):
         sumG = img
-    elif(len(lista_config) > 1):
+    elif(len(obj.gabor) > 1):
         sumG = suma_imagenes(GG)
     else:
         sumG = GG[0]
@@ -94,9 +98,9 @@ def get_vector(lista_config, path_file, obj):
     h_Gabor = hog(sumG, orientations=8, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L2-Hys')
     return(h_Gabor)
 
+
 @jit
 def suma_imagenes(lista_imgs):
-
     size = lista_imgs[0].shape
     r = np.zeros(size)
 
@@ -104,6 +108,7 @@ def suma_imagenes(lista_imgs):
         r += x
 
     return(r)
+
 
 class Features:
     def __init__(self, docs, gabor, resize=(270, 270), equalize=False, edges='none', pixels_per_cell=(32, 32), cells_per_block=(3,3), **kwargs):
@@ -116,10 +121,5 @@ class Features:
         self.edges = edges
 
     def __getitem__(self, filename):
-        #img = imread(filename, as_grey=True)
-        #img = resize(img, self.size, mode='edge')
         # print("==== processing", filename, ", gabor: ", self.gabor, ", resize: ",  self.resize, file=sys.stderr)
-
-        vec = get_vector(self.gabor, filename, self)
-
-        return(vec)
+        return get_vector(self, filename)

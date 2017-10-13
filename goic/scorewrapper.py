@@ -17,7 +17,7 @@ import numpy as np
 import os
 import sys
 from time import time
-from sklearn.metrics import f1_score, accuracy_score, recall_score, precision_score
+from sklearn.metrics import f1_score, accuracy_score, recall_score, precision_score, roc_auc_score
 from sklearn import preprocessing
 from sklearn import cross_validation
 from .classifier import ClassifierWrapper
@@ -89,6 +89,9 @@ class ScoreSampleWrapper(object):
             conf['_microf1'] = f1_score(self.test_y, hy, average='micro')
             conf['_weightedf1'] = f1_score(self.test_y, hy, average='weighted')
 
+        # conf['_macroauc'] = roc_auc_score(self.test_y, hy, average='macro')
+        # conf['_microauc'] = roc_auc_score(self.test_y, hy, average='micro')
+
         m = 1.0
         for x in conf['_all_f1'].values():
             m *= x + 0.0001
@@ -104,7 +107,7 @@ class ScoreSampleWrapper(object):
             conf['_' + self.score] = sum(klist) / len(klist)
 
         conf['_score'] = conf['_' + self.score]
-        print(conf)
+
 
 class ScoreKFoldWrapper(ScoreSampleWrapper):
     def __init__(self, X, y, Xstatic=[], ystatic=[], nfolds=5, score='macrof1', classifier=ClassifierWrapper, random_state=None):

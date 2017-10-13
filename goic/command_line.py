@@ -264,18 +264,19 @@ class CommandLinePredict(CommandLine):
 
         veclist, afflist = [], []
         for x in read_data(self.data.test_set):
-            v, a = model.vectorize(x)
+            # v, a = model.vectorize(x)
+            # veclist.append(v)
+            # afflist.append(a)
+            v = model[x]
             veclist.append(v)
-            afflist.append(a)
 
         L = []
         hy = svc.decision_function(veclist)
         hyy = le.inverse_transform(svc.predict(veclist))
 
-        for tweet, scores, klass, aff in zip(item_iterator(self.data.test_set), hy, hyy, afflist):
+        for tweet, scores, klass in zip(item_iterator(self.data.test_set), hy, hyy):
             # klass = le.inverse_transform(svc.svc.classes_[index])
             tweet['decision_function'] = scores.tolist()
-            tweet['voc_affinity'] = aff
             tweet[KLASS] = str(klass)
             tweet['predicted'] = tweet[KLASS]
             L.append(tweet)
@@ -293,7 +294,7 @@ class CommandLineModel(CommandLinePredict):
         L = []
         with open(self.get_output(), 'w') as fpt:
             for tw in item_iterator(self.data.test_set):
-                tw["vec"] = model[tw[NAME]]
+                tw["vec"] = [x for x in model[tw[NAME]]]
                 # tw["vecsize"] = svc.num_terms
                 L.append(tw)
                 print(json.dumps(tw), file=fpt)

@@ -86,8 +86,8 @@ class PowerGridVariable:
     def get_random(self):
         L = []
         m = randint(1, self.max_enabled+1)
-        if m == 0:
-            return [(0, 0)]
+        # if m == 0:
+        #     return [(0, 0)]
 
         for i in range(m):
             L.append((randint(0, self.nrows),
@@ -116,10 +116,10 @@ class PowerGridVariable:
                 conf[i] = (row, col + 1)
                 yield sorted(set(conf))
 
-            if len(value) > 1:
-                conf = list(value)
-                conf.pop(i)
-                yield conf
+            #if len(value) > 1:
+            conf = list(value)
+            conf.pop(i)
+            yield conf
 
 
 OPTION_NONE = 'none'
@@ -158,6 +158,10 @@ DefaultParams = {
     "cells_per_block": Fixed((3, 3))
 }
 
+
+for key, value in json.loads(os.environ.get("params", '{}')).items():
+    DefaultParams[key] = Fixed(value)
+    
 
 class ParameterSelection:
     def __init__(self, params=None):
