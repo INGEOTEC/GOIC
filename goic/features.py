@@ -9,12 +9,12 @@ import scipy.ndimage.filters as filter
 from skimage.color import rgb2gray
 from skimage.feature import hog, daisy
 from skimage import exposure
-from numba import jit
 from numpy import arange
 import math
 import sys
+from scipy.stats import entropy
 
-@jit
+
 def convertir_bi_uni(lista_tupla):
     indices = []
     for i in lista_tupla:
@@ -55,7 +55,6 @@ def compute_feats(image, kernels):
     return results
 
 
-@jit
 def get_vector(obj, path_file):
     #Tomo los indices de la configuracion
     indices = convertir_bi_uni(obj.gabor)
@@ -101,12 +100,25 @@ def get_vector(obj, path_file):
         sumG = GG[0]
     # Una vez calculadas las imagenes sacamos el HOG
     # vec = hog(sumG, orientations=8, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L2-#Hys')
-    vec = hog(sumG, orientations=8, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L1')
-    # vec = daisy(sumG, step=64, radius=32, rings=3).flatten()
+    if obj.vector == 'hog':
+        orientations = 8
+        vec = hog(sumG, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L1')
+        # vec = daisy(sumG, step=64, radius=32, rings=3).flatten()
+        # if obj.vector == 'pi-hog':
+        #    m = orientations * obj.cells_per_block[0] * obj.cells_per_block[#1]
+        #    XX = np.split(vec, len(vec) // m)
+        # X = [(float(entropy(x)), x) for x in XX]
+        # X = [(np.random.rand(), x) for x in XX]
+        # print(X[:4])
+        # X.sort()
+        # return np.concatenate([np.random.rand(m) for x in XX])
+        # return np.concatenate([x[-1] for x in X])
+    else:
+        raise Exception("Unknown feature detection {0}".format(obj.vector))
+
     return vec
 
 
-@jit
 def suma_imagenes(lista_imgs):
     size = lista_imgs[0].shape
     r = np.zeros(size)
@@ -118,7 +130,7 @@ def suma_imagenes(lista_imgs):
 
 
 class Features:
-    def __init__(self, docs, gabor, resize=(270, 270), equalize=False, edges='none', pixels_per_cell=(32, 32), cells_per_block=(3,3), contrast='none', **kwargs):
+    def __init__(self, docs, gabor, resize=(270, 270), equalize=False, edges='none', pixels_per_cell=(32, 32), cells_per_block=(3,3), contrast='none', vector='hog', **kwargs):
         self.gabor = gabor
         self.resize = resize
         self.kernels = generacion_kernels()
@@ -127,9 +139,11 @@ class Features:
         self.cells_per_block = cells_per_block
         self.edges = edges
         self.contrast = contrast
+        self.vector = vector
 
     def __getitem__(self, filename):
         # print("==== processing", filename, ", gabor: ", self.gabor, ", resize: ",  self.resize, file=sys.stderr)
         x = get_vector(self, filename)
         # print(len(x), file=sys.stderr)
         return x
+
