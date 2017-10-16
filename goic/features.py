@@ -116,10 +116,10 @@ def get_vector(obj, path_file):
         # return np.concatenate([x[-1] for x in X])
     elif obj.vector == 'orb':
         ORB_D = ORB(n_scales=8, n_keypoints = 10)
-        ORB_D.detect_and_extract(sumG)
+        ORB_D.detect_and_extract(imagen)
         D_ORB = ORB_D.descriptors
         #volvemos la matriz a vector
-        vec = np.reshape(D_ORB, (1,np.product(D_ORB.shape)))
+        vec = np.reshape(D_ORB, (np.product(D_ORB.shape)))
 
     elif obj.vector == 'hog-orb':
         orientations = 8
@@ -129,7 +129,7 @@ def get_vector(obj, path_file):
         ORB_D.detect_and_extract(sumG)
         D_ORB = ORB_D.descriptors
         #volvemos la matriz a vector
-        o = np.reshape(D_ORB, (1,np.product(D_ORB.shape)))
+        o = np.reshape(D_ORB, (np.product(D_ORB.shape)))
         vec = np.concatenate((vec,o), axis=1)
 
     else:
