@@ -1,1 +1,1 @@
-# Gabor-Optimized Image Classifiers #
+# Features-Optimized Image Classifiers #
