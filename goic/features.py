@@ -13,6 +13,7 @@ from numpy import arange
 import math
 import sys
 from scipy.stats import entropy
+from skimage.feature import ORB, match_descriptors
 
 
 def convertir_bi_uni(lista_tupla):
@@ -51,7 +52,7 @@ def compute_feats(image, kernels):
     for k, kernel in enumerate(kernels):
         filtered = filter.convolve(image, kernel, mode='wrap')
         results.append(filtered)
- 
+
     return results
 
 
@@ -113,6 +114,24 @@ def get_vector(obj, path_file):
         # X.sort()
         # return np.concatenate([np.random.rand(m) for x in XX])
         # return np.concatenate([x[-1] for x in X])
+    elif obj.vector == 'orb':
+        ORB_D = ORB(n_scales=8, n_keypoints = 10)
+        ORB_D.detect_and_extract(sumG)
+        D_ORB = ORB_D.descriptors
+        #volvemos la matriz a vector
+        vec = np.reshape(D_ORB, (1,np.product(D_ORB.shape)))
+
+    elif obj.vector == 'hog-orb':
+        orientations = 8
+        vec = hog(sumG, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L1')
+
+        ORB_D = ORB(n_scales=8, n_keypoints = 10)
+        ORB_D.detect_and_extract(sumG)
+        D_ORB = ORB_D.descriptors
+        #volvemos la matriz a vector
+        o = np.reshape(D_ORB, (1,np.product(D_ORB.shape)))
+        vec = np.concatenate((vec,o), axis=1)
+
     else:
         raise Exception("Unknown feature detection {0}".format(obj.vector))
 
@@ -141,9 +160,9 @@ class Features:
         self.contrast = contrast
         self.vector = vector
 
+
     def __getitem__(self, filename):
         # print("==== processing", filename, ", gabor: ", self.gabor, ", resize: ",  self.resize, file=sys.stderr)
         x = get_vector(self, filename)
         # print(len(x), file=sys.stderr)
         return x
-

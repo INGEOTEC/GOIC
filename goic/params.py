@@ -160,14 +160,14 @@ DefaultParams = {
     "pixels_per_cell": Fixed((32, 32)),
     # "cells_per_block": SetVariable([(2, 2), (3, 3)])
     "cells_per_block": Fixed((3, 3)),
-    "vector": SetVariable(["hog", "pi-hog"])
-    # "vector": Fixed("pi-hog")
+    #"vector": SetVariable(["hog", "pi-hog", "orb", "hog-orb"])
+     "vector": Fixed("orb")
 }
 
 
 for key, value in json.loads(os.environ.get("params", '{}')).items():
     DefaultParams[key] = Fixed(value)
-    
+
 
 class ParameterSelection:
     def __init__(self, params=None):
