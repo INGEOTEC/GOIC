@@ -101,7 +101,7 @@ def get_vector(obj, path_file):
         sumG = GG[0]
     # Una vez calculadas las imagenes sacamos el HOG
     # vec = hog(sumG, orientations=8, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L2-#Hys')
-    vec = hog(sumG, orientations=8, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L2-Hys')
+    vec = hog(sumG, orientations=8, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L1')
     # vec = daisy(sumG, step=64, radius=32, rings=3).flatten()
     return vec
 

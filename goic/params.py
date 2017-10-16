@@ -150,13 +150,13 @@ DefaultParams = {
     "gabor": PowerGridVariable(7, 5, 8),
     # "resize": SetVariable([(320, 320), (380, 380), (270, 270), (420, 420)]),
     # "resize": Fixed((320, 320)),
-    "resize": Fixed((320, 320)),
-    "equalize": SetVariable(['none', 'local:30', 'global']),
+    "resize": Fixed((200, 200)),
+    "equalize": SetVariable(['none', 'local:10', 'global']),
     # "edges": SetVariable(['none', 'scharr', 'sobel', 'prewitt', 'roberts']),
     "edges": SetVariable(['none', 'scharr', 'sobel']),
     "contrast": SetVariable(['none', 'sub-mean']),
-    #"pixels_per_cell": SetVariable([(32, 32), (64, 64)]),
-    "pixels_per_cell": Fixed((32, 32)),
+    # "pixels_per_cell": SetVariable([(32, 32), (64, 64)]),
+    "pixels_per_cell": SetVariable([(8, 8), (24, 24), (32, 32)]),
     # "cells_per_block": SetVariable([(2, 2), (3, 3)])
     "cells_per_block": Fixed((3, 3))
 }

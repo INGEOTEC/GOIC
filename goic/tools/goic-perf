@@ -40,12 +40,13 @@ def performance(gold, predicted, output=None, avgf1=None):
         'macrof1': f1_score(y, hy, average='macro'),
         'macrorecall': recall_score(y, hy, average='macro'),
         'microf1': f1_score(y, hy, average='micro'),
-        # 'macroauc': roc_auc_score(y, hy, average='macro'),
-        # 'microauc': roc_auc_score(y, hy, average='micro'),
         'accuracy': accuracy_score(y, hy),
         'filename': predicted,
     }
     report['macrof1accuracy'] = report['accuracy'] * report['macrof1']
+    if len(f1) == 2:
+        report['macroauc'] = roc_auc_score(y, hy, average='macro')
+        report['microauc'] = roc_auc_score(y, hy, average='micro')
 
     for key, value in f1.items():
         report["f1_{0}".format(key)] = value
