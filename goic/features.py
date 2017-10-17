@@ -13,7 +13,8 @@ from numpy import arange
 import math
 import sys
 from scipy.stats import entropy
-from skimage.feature import ORB, match_descriptors
+from skimage.feature import ORB, match_descriptors, local_binary_pattern
+
 
 
 def convertir_bi_uni(lista_tupla):
@@ -101,8 +102,9 @@ def get_vector(obj, path_file):
         sumG = GG[0]
     # Una vez calculadas las imagenes sacamos el HOG
     # vec = hog(sumG, orientations=8, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L2-#Hys')
+    orientations = 8
     if obj.vector == 'hog':
-        orientations = 8
+
         vec = hog(sumG, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L1')
         # vec = daisy(sumG, step=64, radius=32, rings=3).flatten()
         # if obj.vector == 'pi-hog':
@@ -122,7 +124,7 @@ def get_vector(obj, path_file):
         vec = np.reshape(D_ORB, (np.product(D_ORB.shape)))
 
     elif obj.vector == 'hog-orb':
-        orientations = 8
+        
         vec = hog(sumG, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L1')
 
         ORB_D = ORB(n_scales=8, n_keypoints = 10)
@@ -131,6 +133,10 @@ def get_vector(obj, path_file):
         #volvemos la matriz a vector
         o = np.reshape(D_ORB, (np.product(D_ORB.shape)))
         vec = np.concatenate((vec,o), axis=1)
+
+    elif obj.vector == 'lbp-hog':
+        LBP = local_binary_pattern(sumG, 3, 3, method='default')
+        vec = hog(LBP, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L1')
 
     else:
         raise Exception("Unknown feature detection {0}".format(obj.vector))

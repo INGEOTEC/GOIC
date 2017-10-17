@@ -160,8 +160,8 @@ DefaultParams = {
     "pixels_per_cell": Fixed((32, 32)),
     # "cells_per_block": SetVariable([(2, 2), (3, 3)])
     "cells_per_block": Fixed((3, 3)),
-    #"vector": SetVariable(["hog", "pi-hog", "orb", "hog-orb"])
-     "vector": Fixed("orb")
+    #"vector": SetVariable(["hog", "pi-hog", "orb", "hog-orb", "lbp-hog"])
+     "vector": Fixed("lbp-hog")
 }
 
 
