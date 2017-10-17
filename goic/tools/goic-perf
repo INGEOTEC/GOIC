@@ -4,12 +4,32 @@ from goic.utils import item_iterator
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score, roc_auc_score
 from sklearn.metrics import cohen_kappa_score
+import numpy as np
 import json
 import os
 import sys
 
 KLASS=os.environ.get('klass', 'klass')
 
+
+def auc(gold, predicted):
+    y = np.array([x['retinopathy'] for x in item_iterator(gold)])
+    hy = np.array([x['decision_function'] for x in item_iterator(predicted)])
+    Y = np.zeros((y.shape[0], np.unique(y).shape[0]))
+    
+    Y[np.arange(y.shape[0]), y] = 1
+    
+    hy[~np.isfinite(hy)] = 0
+    hy[hy > 1] = 1
+    res = {}
+    res['micro-auc-prob'] = roc_auc_score(Y, hy, average='micro')
+    res['macro-auc-prob'] = roc_auc_score(Y, hy, average='macro')
+    
+    hy[hy < -1] = -1
+    hy = hy * 0.5 + 0.5
+    res['micro-auc-df'] = roc_auc_score(Y, hy, average='micro')
+    res['macro-auc-df'] = roc_auc_score(Y, hy, average='macro')
+    return res
 
 def show_mismatches(gold, predicted, output=None, avgf1=None):
     i = 0
@@ -34,7 +54,7 @@ def performance(gold, predicted, output=None, avgf1=None):
     #     a = json.load(fpt)
     f1 = {le.inverse_transform([klass])[0]: f1 for klass, f1 in enumerate(f1_score(y, hy, average=None))}
     precision = {le.inverse_transform([klass])[0]: p for klass, p in enumerate(precision_score(y, hy, average=None))}
-
+    
     report = {
         'quadratic_weighted_kappa': cohen_kappa_score(y, hy, weights='quadratic'),
         'macrof1': f1_score(y, hy, average='macro'),
@@ -44,9 +64,16 @@ def performance(gold, predicted, output=None, avgf1=None):
         'filename': predicted,
     }
     report['macrof1accuracy'] = report['accuracy'] * report['macrof1']
+
     if len(f1) == 2:
-        report['macroauc'] = roc_auc_score(y, hy, average='macro')
-        report['microauc'] = roc_auc_score(y, hy, average='micro')
+        report['macro-auc'] = roc_auc_score(y, hy, average='macro')
+        report['micro-auc'] = roc_auc_score(y, hy, average='micro')
+    else:
+        try:
+            report.update(auc(gold, predicted))
+        except Exception as err:
+            
+            print("An error was found at multiclass-AUC, ignoring metric\n", err, file=sys.stderr)
 
     for key, value in f1.items():
         report["f1_{0}".format(key)] = value

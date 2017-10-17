@@ -155,13 +155,13 @@ DefaultParams = {
     # "edges": SetVariable(['none', 'scharr', 'sobel', 'prewitt', 'roberts']),
     "edges": SetVariable(['none', 'scharr', 'sobel']),
     "contrast": SetVariable(['none', 'sub-mean']),
-    # "pixels_per_cell": SetVariable([(32, 32), (64, 64)]),
+    "pixels_per_cell": SetVariable([(32, 32), (64, 64), (128, 128)]),
     # "pixels_per_cell": SetVariable([(16, 16), (24, 24), (32, 32)]),
-    "pixels_per_cell": Fixed((32, 32)),
-    # "cells_per_block": SetVariable([(2, 2), (3, 3)])
-    "cells_per_block": Fixed((3, 3)),
-    #"vector": SetVariable(["hog", "pi-hog", "orb", "hog-orb", "lbp-hog"])
-     "vector": Fixed("lbp-hog")
+    # "pixels_per_cell": Fixed((32, 32)),
+    "cells_per_block": SetVariable([(2, 2), (3, 3)]),
+    # "cells_per_block": Fixed((3, 3)),
+    # "vector": SetVariable(["hog", "pi-hog", "orb", "hog-orb", "lbp-hog"])
+    "vector": Fixed("lbp-hog")
 }
 
 
@@ -232,7 +232,6 @@ class ParameterSelection:
         else:
             for conf in best_list:
                 tabu.add(_identifier(conf))
-
 
         def _hill_climbing(keywords, desc):
             # second approximation, a hill climbing process

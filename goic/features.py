@@ -104,7 +104,6 @@ def get_vector(obj, path_file):
     # vec = hog(sumG, orientations=8, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L2-#Hys')
     orientations = 8
     if obj.vector == 'hog':
-
         vec = hog(sumG, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L1')
         # vec = daisy(sumG, step=64, radius=32, rings=3).flatten()
         # if obj.vector == 'pi-hog':
@@ -117,27 +116,23 @@ def get_vector(obj, path_file):
         # return np.concatenate([np.random.rand(m) for x in XX])
         # return np.concatenate([x[-1] for x in X])
     elif obj.vector == 'orb':
-        ORB_D = ORB(n_scales=8, n_keypoints = 10)
+        ORB_D = ORB(n_scales=8, n_keypoints=10)
         ORB_D.detect_and_extract(sumG)
         D_ORB = ORB_D.descriptors
-        #volvemos la matriz a vector
+        # volvemos la matriz a vector
         vec = np.reshape(D_ORB, (np.product(D_ORB.shape)))
 
-    elif obj.vector == 'hog-orb':
-        
+    elif obj.vector == 'hog-orb':        
         vec = hog(sumG, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L1')
-
-        ORB_D = ORB(n_scales=8, n_keypoints = 10)
+        ORB_D = ORB(n_scales=8, n_keypoints=10)
         ORB_D.detect_and_extract(sumG)
         D_ORB = ORB_D.descriptors
-        #volvemos la matriz a vector
+        # volvemos la matriz a vector
         o = np.reshape(D_ORB, (np.product(D_ORB.shape)))
-        vec = np.concatenate((vec,o), axis=1)
-
+        vec = np.concatenate((vec, o), axis=1)
     elif obj.vector == 'lbp-hog':
         LBP = local_binary_pattern(sumG, 3, 3, method='default')
         vec = hog(LBP, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L1')
-
     else:
         raise Exception("Unknown feature detection {0}".format(obj.vector))
 
@@ -165,7 +160,6 @@ class Features:
         self.edges = edges
         self.contrast = contrast
         self.vector = vector
-
 
     def __getitem__(self, filename):
         # print("==== processing", filename, ", gabor: ", self.gabor, ", resize: ",  self.resize, file=sys.stderr)
