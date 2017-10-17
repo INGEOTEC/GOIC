@@ -161,7 +161,8 @@ DefaultParams = {
     "cells_per_block": SetVariable([(2, 2), (3, 3)]),
     # "cells_per_block": Fixed((3, 3)),
     # "vector": SetVariable(["hog", "pi-hog", "orb", "hog-orb", "lbp-hog"])
-    "vector": Fixed("lbp-hog")
+    "vector": Fixed("lbp-hog"),
+    "channels": SetVariable(["green", "rgb"])
 }
 
 

@@ -69,7 +69,10 @@ def get_vector(obj, path_file):
         for i in range(3):
             imagen[:,:,i] = imagen[:,:,i] - imagen[:,:,i].mean()
 
-    imagen = rgb2gray(imagen)
+    if obj.channels == "green":
+        imagen = imagen[:,:,1]
+    else:
+        imagen = rgb2gray(imagen)
 
     if obj.equalize != 'none':
         if obj.equalize == 'global':
@@ -122,7 +125,7 @@ def get_vector(obj, path_file):
         # volvemos la matriz a vector
         vec = np.reshape(D_ORB, (np.product(D_ORB.shape)))
 
-    elif obj.vector == 'hog-orb':        
+    elif obj.vector == 'hog-orb':
         vec = hog(sumG, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L1')
         ORB_D = ORB(n_scales=8, n_keypoints=10)
         ORB_D.detect_and_extract(sumG)
