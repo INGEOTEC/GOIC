@@ -96,7 +96,7 @@ def get_vector(obj, path_file):
 
 
     if obj.correlation == 'yes':
-        mascara = io.imread("mascara7.png")
+        mascara = io.imread("mascara.png")
         mascara = rgb2gray(mascara)
         mascara = np.array(mascara)
         mascara = skimage.transform.resize(mascara, (25,25), mode='edge')
