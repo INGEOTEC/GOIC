@@ -165,7 +165,7 @@ def suma_imagenes(lista_imgs):
 
 
 class Features:
-    def __init__(self, docs, gabor, resize=(270, 270), equalize=False, edges='none', pixels_per_cell=(32, 32), cells_per_block=(3,3), contrast='none', vector='hog',channels='rgb',contrast='yes', **kwargs):
+    def __init__(self, docs, gabor, resize=(270, 270), equalize=False, edges='none', pixels_per_cell=(32, 32), cells_per_block=(3,3), contrast='none', vector='hog',channels='rgb',correlation='yes', **kwargs):
         self.gabor = gabor
         self.resize = resize
         self.kernels = generacion_kernels()
