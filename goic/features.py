@@ -10,6 +10,7 @@ from skimage.color import rgb2gray
 from skimage.feature import hog, daisy
 from skimage import exposure
 from numpy import arange
+import skimage
 import math
 import sys
 from scipy.stats import entropy
@@ -96,16 +97,17 @@ def get_vector(obj, path_file):
 
 
     if obj.correlation == 'yes':
-        mascara = io.imread("goic/mascara.png")
+        mascara = io.imread("/home/daniela/GOIC/GOIC/mascara.png")
         mascara = rgb2gray(mascara)
         mascara = np.array(mascara)
         mascara = skimage.transform.resize(mascara, (25,25), mode='edge')
         resultado =  match_template(imagen, mascara)
         resultado = resultado + abs(resultado.min())
         resultado[~((resultado < 0.2) | (resultado > resultado.max()-0.2))] = 0.6
-        imagen = resultado
+        img = resultado
+    else:
+        img = img_as_float(imagen)
 
-    img = img_as_float(imagen)
     GG = []
     #Se calcula la Gabor image para cada filtro especificado
     GG = compute_feats(img, k)
@@ -119,7 +121,7 @@ def get_vector(obj, path_file):
     # vec = hog(sumG, orientations=8, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L2-#Hys')
     orientations = 8
     if obj.vector == 'hog':
-        vec = hog(sumG, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L1')
+        vec = hog(sumG, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block)
         # vec = daisy(sumG, step=64, radius=32, rings=3).flatten()
         # if obj.vector == 'pi-hog':
         #    m = orientations * obj.cells_per_block[0] * obj.cells_per_block[#1]
@@ -138,7 +140,7 @@ def get_vector(obj, path_file):
         vec = np.reshape(D_ORB, (np.product(D_ORB.shape)))
 
     elif obj.vector == 'hog-orb':
-        vec = hog(sumG, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L1')
+        vec = hog(sumG, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block)
         ORB_D = ORB(n_scales=8, n_keypoints=10)
         ORB_D.detect_and_extract(sumG)
         D_ORB = ORB_D.descriptors
@@ -147,7 +149,7 @@ def get_vector(obj, path_file):
         vec = np.concatenate((vec, o), axis=1)
     elif obj.vector == 'lbp-hog':
         LBP = local_binary_pattern(sumG, 3, 3, method='default')
-        vec = hog(LBP, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L1')
+        vec = hog(LBP, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block)
     else:
         raise Exception("Unknown feature detection {0}".format(obj.vector))
 
