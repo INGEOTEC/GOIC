@@ -175,6 +175,8 @@ class Features:
         self.edges = edges
         self.contrast = contrast
         self.vector = vector
+        self.channels = channels
+        self.correlation = correlation 
 
     def __getitem__(self, filename):
         # print("==== processing", filename, ", gabor: ", self.gabor, ", resize: ",  self.resize, file=sys.stderr)
