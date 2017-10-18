@@ -14,6 +14,7 @@ import math
 import sys
 from scipy.stats import entropy
 from skimage.feature import ORB, match_descriptors, local_binary_pattern
+from skimage.feature import match_template
 
 
 
@@ -92,6 +93,17 @@ def get_vector(obj, path_file):
             imagen = roberts(imagen)
         else:
             raise ArgumentException("Unknown edge detector {0}".format(obj.edges))
+
+
+    if obj.correlation == 'yes':
+        mascara = io.imread("mascara7.png")
+        mascara = rgb2gray(mascara)
+        mascara = np.array(mascara)
+        mascara = skimage.transform.resize(mascara, (25,25), mode='edge')
+        resultado =  match_template(imagen, mascara)
+        resultado = resultado + abs(resultado.min())
+        resultado[~((resultado < 0.2) | (resultado > resultado.max()-0.2))] = 0.6
+        imagen = resultado
 
     img = img_as_float(imagen)
     GG = []

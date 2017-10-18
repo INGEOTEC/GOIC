@@ -162,7 +162,9 @@ DefaultParams = {
     # "cells_per_block": Fixed((3, 3)),
     # "vector": SetVariable(["hog", "pi-hog", "orb", "hog-orb", "lbp-hog"])
     "vector": Fixed("lbp-hog"),
-    "channels": SetVariable(["green", "rgb"])
+    #"channels": SetVariable(["green", "rgb"]),
+    "channels": Fixed("rgb"),
+    "correlation":SetVariable(["none", "yes"])
 }
 
 
