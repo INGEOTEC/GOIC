@@ -1,15 +1,16 @@
+import os
+import json
+
 from sklearn.svm import LinearSVC, SVC
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import SGDClassifier
 from sklearn.naive_bayes import GaussianNB, MultinomialNB
 
-import os
-import json
 
-classifier_kwargs = json.loads(os.environ.get('classifier', '{}'))
-classifier = classifier_kwargs.pop("type", "LinearSVC")
-CLASSES = {
+DEFAULT = json.loads(os.environ.get('classifier', '{"type": "linearsvm"}'))
+
+CLASSIFIERS = {
     "linearsvm": LinearSVC,
     "linearsvc": LinearSVC,
     "svm": SVC,
@@ -22,11 +23,16 @@ CLASSES = {
     "mnb": MultinomialNB
 }
 
-classifier = CLASSES[classifier.lower()]
 
 class ClassifierWrapper(object):
-    def __init__(self):
-        self.svc = classifier(**classifier_kwargs)
+    def __init__(self, classifier=None, **kwargs):
+        if classifier is None:
+            d = DEFAULT.copy()
+            classtype = d.pop('type', 'linearsvc')
+            classtype = CLASSIFIERS[classtype]
+            self.svc = classtype(**d)
+        else:
+            self.svc = classifier(**kwargs)
 
     def fit(self, X, y):
         # X = corpus2csc(X).T

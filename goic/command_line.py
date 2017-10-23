@@ -16,6 +16,7 @@ import os
 import json
 import pickle
 
+
 # from goic.params import ParameterSelection
 def load_pickle(filename):
     if filename.endswith(".gz"):
@@ -36,6 +37,7 @@ def load_json(filename):
     else:
         with open(filename) as f:
             return json.load(f)
+
 
 class CommandLine(object):
     def __init__(self):
@@ -149,7 +151,7 @@ class CommandLine(object):
         if self.data.conf:
             conf = json.loads(self.data.conf)
             conf['gabor'] = [(a, b) for a, b in conf['gabor'] ]
-            best_list = self.get_best(fun_score, (conf, 'direct-input'))
+            best_list = sel.get_best(fun_score, (conf, 'direct-input'))
         else:
             best_list = sel.search(
                 fun_score,

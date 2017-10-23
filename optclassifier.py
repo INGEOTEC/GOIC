@@ -1,0 +1,210 @@
+import argparse
+import logging
+import goic
+import sys
+import gzip
+from goic.utils import read_data, item_iterator
+from multiprocessing import cpu_count, Pool
+from goic.scorewrapper import ScoreKFoldWrapper, ScoreSampleWrapper
+from goic.utils import read_data_labels, NAME, KLASS, item_iterator
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import KFold
+
+from sklearn.svm import LinearSVC, SVC
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.linear_model import SGDClassifier
+from sklearn.naive_bayes import GaussianNB, MultinomialNB
+
+import numpy as np
+import os
+import json
+import pickle
+
+
+
+# from goic.params import ParameterSelection
+def load_pickle(filename):
+    if filename.endswith(".gz"):
+        f = gzip.GzipFile(filename)
+        X = pickle.load(f)
+        f.close()
+        return X
+    else:
+        with open(filename, 'rb') as f:
+            return pickle.load(f)
+
+def load_json(filename):
+    if filename.endswith(".gz"):
+        f = gzip.GzipFile(filename)
+        X = json.load(f)
+        f.close()
+        return X
+    else:
+        with open(filename) as f:
+            return json.load(f)
+
+CONFIGURATIONS = [
+        {"type": LinearSVC, "C": 10, "class_weight": "balanced"},
+        {"type": LinearSVC, "C": 1, "class_weight": "balanced"},
+        {"type": LinearSVC, "C": 0.1, "class_weight": "balanced"},
+        {"type": SVC, "kernel": "rbf", "C": 1},
+        {"type": SVC, "kernel": "rbf", "C": 10},
+        {"type": SVC, "kernel": "rbf", "C": 0.1},
+        {"type": SVC, "kernel": "poly", "degree": 2},
+        {"type": GaussianNB},
+        {"type": MultinomialNB},
+        {"type": MLPClassifier, "hidden_layer_sizes": [32, 16]},
+        {"type": MLPClassifier, "hidden_layer_sizes": [32, 16, 8]},
+        {"type": KNeighborsClassifier, "n_neighbors": 3, "weights": "uniform"},
+        {"type": KNeighborsClassifier, "n_neighbors": 11, "weights": "uniform"},
+        {"type": KNeighborsClassifier, "n_neighbors": 3, "weights": "distance"},
+        {"type": KNeighborsClassifier, "n_neighbors": 11, "weights": "distance"},
+        {"type": SGDClassifier, "loss": "hinge", "penalty": "l2"},
+        {"type": SGDClassifier, "loss": "squared_hinge", "penalty": "l2"},
+        {"type": SGDClassifier, "loss": "log", "penalty": "l2"},
+    ]
+
+def search_model(args, pool, X, y, Xstatic, ystatic):
+    if args.numprocs == 1:
+        pool = None
+    elif args.numprocs == 0:
+        pool = Pool(cpu_count())
+    else:
+        pool = Pool(args.numprocs)
+
+    assert args.score.split(":")[0] in ('macrorecall', 'macrof1accuracy', 'macrof1', 'microf1', 'weightedf1', 'accuracy', 'avgf1', 'geometricf1', 'harmonicf1'), "Unknown score {0}".format(args.score)
+
+    if ":" in args.kratio:
+        ratio, test_ratio = args.kratio.split(":")
+        fun_score = ScoreSampleWrapper(
+            X,
+            y,
+            Xstatic=Xstatic,
+            ystatic=ystatic,
+            ratio=float(ratio),
+            test_ratio=float(test_ratio),
+            score=args.score,
+            random_state=args.seed,
+        )
+    else:
+        ratio = float(args.kratio)
+        if ratio == 1.0:
+            raise ValueError('k=1 is undefined')
+        if ratio > 1:
+            fun_score = ScoreKFoldWrapper(X, y, Xstatic=Xstatic, ystatic=ystatic, nfolds=int(ratio), score=args.score, random_state=args.seed)
+        else:
+            fun_score = ScoreSampleWrapper(X, y, Xstatic=Xstatic, ystatic=ystatic, ratio=ratio, score=args.score, random_state=args.seed)
+
+    if pool is None:
+        L = list(map(fun_score, CONFIGURATIONS))
+    else:
+        L = pool.map(fun_score, CONFIGURATIONS)
+
+    L.sort(key=lambda x: -x['_score'])
+    best = L[0].copy()
+    for l in L:
+        l["type"] = l["type"].__name__
+
+    with open(args.output + ".params", 'w') as fpt:
+        print(json.dumps(L[0], indent=2, sort_keys=True), file=sys.stderr)
+        fpt.write(json.dumps(L, indent=2, sort_keys=True))
+
+    return best
+
+
+def train():
+    parser = argparse.ArgumentParser(description="GOIC's model selection")
+    add = parser.add_argument
+    add('--version', action='version', version='goic %s' % goic.__version__)
+    add('-k', '--kratio',
+        dest='kratio',
+        help='Predict the training set using stratified k-fold (k > 1) or a sampling ratio (when 0 < k < 1)',
+        default="0.5",
+        type=str)
+
+    add('training_set', nargs='+', default=None, help='Filenames containing the training data')
+    add('--verbose', dest='verbose', type=int, help='Logging level default: INFO + 1', default=logging.INFO+1)
+    add('-n', '--numprocs', dest='numprocs', type=int, default=1,
+        help="Number of processes to compute the best setup")
+    add('-S', '--score', dest='score', type=str, default='macrof1',
+        help="The name of the score to be optimized (macrof1|macrorecall|macrof1accuracy|weightedf1|accuracy|avgf1:klass1:klass2|geometricf1|harmonicf1); it defaults to macrof1")
+    add('-o', '--output-file', dest='output', default="output", help='File name to store the output')
+    add('--seed', default=0, type=int)
+
+    args = parser.parse_args()
+    np.random.seed(args.seed)
+    logging.basicConfig(level=args.verbose)
+
+    X, y = [], []
+    Xstatic, ystatic = [], []
+
+    for train in args.training_set:
+        if train.startswith("static:"):
+            X_, y_ = read_data_labels(train[7:])
+            Xstatic.extend(X_)
+            ystatic.extend(y_)
+        else:
+            X_, y_ = read_data_labels(train)
+            X.extend(X_)
+            y.extend(y_)
+
+    best = None
+    if os.path.exists(args.output + ".params"):
+        with open(args.output + ".params") as f:
+            best = json.load(f)[0]
+        best["type"] = [c["type"] for c in CONFIGURATIONS if c["type"].__name__ == best["type"]][0]
+    else:
+        best = search_model(args, pool, X, y, Xstatic, ystatic)
+    
+    X = [np.array(x) for x in X + Xstatic]
+    y = y + ystatic
+    le = LabelEncoder().fit(y)
+    y = le.transform(y)
+
+    kwargs = {k: v for k, v in best.items() if k[0] != '_'}
+    ctype = kwargs.pop("type")
+    classifier = ctype(**kwargs)
+    classifier.fit(X, y)
+
+    with open(args.output + ".model", 'wb') as fpt:
+        pickle.dump([classifier, le], fpt)
+
+    return L
+
+def predict():
+    parser = argparse.ArgumentParser(description="GOIC's model selection")
+    add = parser.add_argument
+    add('--version', action='version', version='goic %s' % goic.__version__)
+    add('-m', "--model", dest="model", help="model's name")
+    add('--verbose', dest='verbose', type=int, help='Logging level default: INFO + 1', default=logging.INFO+1)
+    add('-i', '--input-file', dest='input', help='input file')
+    add('-o', '--output-file', dest='output', help='File name to store the output')
+    add('--seed', default=0, type=int)
+
+    args = parser.parse_args()
+    np.random.seed(args.seed)
+    logging.basicConfig(level=args.verbose)
+    if args.model is None:
+        raise Exception("A model-file must be given")
+    
+    with open(args.model, "rb") as f:
+        classifier, le = pickle.load(f)
+    
+    with open(args.output, "w") as f:
+        for item in item_iterator(args.input):
+            x = np.array(item[NAME])
+            hy = le.inverse_transform(classifier.predict([x]))
+            item["predicted"] = item[KLASS] = hy[0]
+            item["decision_function"] = classifier.decision_function([x])[0]
+            print(json.dumps(item), file=f)
+
+
+if __name__ == '__main__':
+    action = os.environ.get("action", None)
+    if action == "train":
+        train()
+    elif action == "predict":
+        predict()
+    else:
+        raise Exception("'action' environment should be train or predict ")

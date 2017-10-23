@@ -17,6 +17,7 @@ import numpy as np
 import os
 import sys
 from time import time
+
 from sklearn.metrics import f1_score, accuracy_score, recall_score, precision_score, roc_auc_score
 from sklearn import preprocessing
 from sklearn import cross_validation
@@ -51,27 +52,44 @@ class ScoreSampleWrapper(object):
         self.test_corpus = [X[i] for i in test]
         self.test_y = y[test]
 
-    def __call__(self, conf_code):
-        conf, code = conf_code
-        print("testing ", conf, file=sys.stderr)
-        st = time()
-        model_klass = os.environ.get("klasses", None)
-
-        if model_klass:
-            model_klass = self.le.transform(model_klass.split(','))
-            _train = [self.train_corpus[i] for i in len(self.train_corpus) if self.train_y[i] in model_klass]
-            model = Features(_train, **conf)
+    def __call__(self, args):
+        if isinstance(args, (tuple, list)):
+            conf, code = args
+            create_classifier = self.create_classifier
+            model = None
+            print("testing ", conf, file=sys.stderr)
         else:
-            model = Features(self.train_corpus, **conf)
+            print("testing ", args, file=sys.stderr)
+            conf = args.copy()
+            classifier = args.get("type")
+            ckwargs = args.get("kwargs")
+            model = lambda item: np.array(item)
+            create_classifier = lambda: classifier(**ckwargs)
+    
+        st = time()
 
-        train_X = [model[doc] for doc in self.train_corpus]
+        if model is None:
+            model_klass = os.environ.get("klasses", None)
+
+            if model_klass:
+                model_klass = self.le.transform(model_klass.split(','))
+                _train = [self.train_corpus[i] for i in len(self.train_corpus) if self.train_y[i] in model_klass]
+                model = Features(_train, **conf)
+            else:
+                model = Features(self.train_corpus, **conf)
+            
+            train_X = [model[doc] for doc in self.train_corpus]
+            test_X = [model[doc] for doc in self.test_corpus]
+        else:
+            train_X = [model(doc) for doc in self.train_corpus]
+            test_X = [model(doc) for doc in self.test_corpus]
+
         c = self.create_classifier()
         c.fit(train_X, self.train_y)
-        test_X = [model[doc] for doc in self.test_corpus]
+
         pred_y = c.predict(test_X)
         self.compute_score(conf, pred_y)
         conf['_time'] = (time() - st)
-        print("finished ", conf, file=sys.stderr)
         return conf
 
     def compute_score(self, conf, hy):
@@ -79,8 +97,8 @@ class ScoreSampleWrapper(object):
         conf['_all_f1'] = M = {str(self.le.inverse_transform([klass])[0]): f1 for klass, f1 in enumerate(f1_score(self.test_y, hy, average=None))}
         conf['_all_recall'] = {str(self.le.inverse_transform([klass])[0]): r for klass, r in enumerate(RS)}
         conf['_all_precision'] = {str(self.le.inverse_transform([klass])[0]): f1 for klass, f1 in enumerate(precision_score(self.test_y, hy, average=None))}
-
         conf['_macrorecall'] = np.mean(RS)
+
         if len(self.le.classes_) == 2:
             conf['_macrof1'] = np.mean(np.array([v for v in conf['_all_f1'].values()]))
             conf['_weightedf1'] = conf['_microf1'] = f1_score(self.test_y, hy, average='binary')
@@ -126,8 +144,18 @@ class ScoreKFoldWrapper(ScoreSampleWrapper):
         self.create_classifier = classifier
         self.kfolds = cross_validation.StratifiedKFold(y, n_folds=nfolds, shuffle=True, random_state=random_state)
 
-    def __call__(self, conf_code):
-        conf, code = conf_code
+    def __call__(self, args):
+        if isinstance(args, (tuple, list)):
+            conf, code = args
+            create_classifier = self.create_classifier
+        else:
+            print("testing ", args, file=sys.stderr)
+            conf = args.copy()
+            classifier = args.get("type")
+            ckwargs = args.get("kwargs")
+            model = lambda item: np.array(item)
+            create_classifier = lambda: classifier(**ckwargs)
+
         st = time()
         predY = np.zeros(len(self.y))
         # X = np.array(self.X)
@@ -141,12 +169,16 @@ class ScoreKFoldWrapper(ScoreSampleWrapper):
             if len(self.ystatic) > 0:
                 trainY = np.hstack((trainY, self.ystatic))
 
-            model = Features(A, **conf)
+            if model is None:
+                model = Features(A, **conf)                
+                # model = Features([X[i] for i in train], **conf)
+                trainX = [model[x] for x in A]
+                testX = [model[self.X[i]] for i in test]
+            else:
+                trainX = [model(x) for x in A]
+                testX = [model(self.X[i]) for i in test]
 
-            # model = Features([X[i] for i in train], **conf)
-            trainX = [model[x] for x in A]
-
-            c = self.create_classifier()
+            c = create_classifier()
             try:
                 c.fit(trainX, trainY)
             except ValueError:
@@ -154,7 +186,6 @@ class ScoreKFoldWrapper(ScoreSampleWrapper):
                 conf["_score"] = 0.0
                 return conf
 
-            testX = [model[self.X[i]] for i in test]
             predY[test] = c.predict(testX)
 
         self.compute_score(conf, predY)
