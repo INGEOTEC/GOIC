@@ -66,12 +66,6 @@ CONFIGURATIONS = [
     ]
 
 def search_model(args, pool, X, y, Xstatic, ystatic):
-    if args.numprocs == 1:
-        pool = None
-    elif args.numprocs == 0:
-        pool = Pool(cpu_count())
-    else:
-        pool = Pool(args.numprocs)
 
     assert args.score.split(":")[0] in ('macrorecall', 'macrof1accuracy', 'macrof1', 'microf1', 'weightedf1', 'accuracy', 'avgf1', 'geometricf1', 'harmonicf1'), "Unknown score {0}".format(args.score)
 
@@ -136,6 +130,13 @@ def train():
     np.random.seed(args.seed)
     logging.basicConfig(level=args.verbose)
 
+    if args.numprocs == 1:
+        pool = None
+    elif args.numprocs == 0:
+        pool = Pool(cpu_count())
+    else:
+        pool = Pool(args.numprocs)
+
     X, y = [], []
     Xstatic, ystatic = [], []
 
@@ -170,7 +171,7 @@ def train():
     with open(args.output + ".model", 'wb') as fpt:
         pickle.dump([classifier, le], fpt)
 
-    return L
+    return (classifier, le)
 
 def predict():
     parser = argparse.ArgumentParser(description="GOIC's model selection")
@@ -196,7 +197,11 @@ def predict():
             x = np.array(item[NAME])
             hy = le.inverse_transform(classifier.predict([x]))
             item["predicted"] = item[KLASS] = hy[0]
-            item["decision_function"] = classifier.decision_function([x])[0]
+            if hasattr(classifier, "decision_function"):
+                item["decision_function"] = classifier.decision_function([x])[0]
+            else:
+                item["predict_proba"] = classifier.predict_proba([x])[0].tolist()
+
             print(json.dumps(item), file=f)
 
 

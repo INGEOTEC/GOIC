@@ -53,18 +53,17 @@ class ScoreSampleWrapper(object):
         self.test_y = y[test]
 
     def __call__(self, args):
+        print("testing SampleWrapper: ", args, file=sys.stderr)
+
         if isinstance(args, (tuple, list)):
             conf, code = args
             create_classifier = self.create_classifier
             model = None
-            print("testing ", conf, file=sys.stderr)
         else:
-            print("testing ", args, file=sys.stderr)
             conf = args.copy()
-            classifier = args.get("type")
-            ckwargs = args.get("kwargs")
+            classifier = args.pop("type")
             model = lambda item: np.array(item)
-            create_classifier = lambda: classifier(**ckwargs)
+            create_classifier = lambda: classifier(**args)
     
         st = time()
 
@@ -84,7 +83,7 @@ class ScoreSampleWrapper(object):
             train_X = [model(doc) for doc in self.train_corpus]
             test_X = [model(doc) for doc in self.test_corpus]
 
-        c = self.create_classifier()
+        c = create_classifier()
         c.fit(train_X, self.train_y)
 
         pred_y = c.predict(test_X)
@@ -145,16 +144,16 @@ class ScoreKFoldWrapper(ScoreSampleWrapper):
         self.kfolds = cross_validation.StratifiedKFold(y, n_folds=nfolds, shuffle=True, random_state=random_state)
 
     def __call__(self, args):
+        print("testing kfolds: ", args, file=sys.stderr)
         if isinstance(args, (tuple, list)):
             conf, code = args
             create_classifier = self.create_classifier
         else:
-            print("testing ", args, file=sys.stderr)
             conf = args.copy()
-            classifier = args.get("type")
-            ckwargs = args.get("kwargs")
+            classifier = args.pop("type")
+            ckwargs = args
             model = lambda item: np.array(item)
-            create_classifier = lambda: classifier(**ckwargs)
+            create_classifier = lambda: classifier(**args)
 
         st = time()
         predY = np.zeros(len(self.y))
