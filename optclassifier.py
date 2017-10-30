@@ -142,13 +142,13 @@ def train():
 
     for train in args.training_set:
         if train.startswith("static:"):
-            X_, y_ = read_data_labels(train[7:])
-            Xstatic.extend(X_)
-            ystatic.extend(y_)
+            for item in item_iterator(train[7:]):
+                Xstatic.append(loadvector(item))
+                ystatic.append(item[KLASS])
         else:
-            X_, y_ = read_data_labels(train)
-            X.extend(X_)
-            y.extend(y_)
+            for item in item_iterator(train):
+                X.append(loadvector(item))
+                y.append(item[KLASS])
 
     best = None
     if os.path.exists(args.output + ".params"):
@@ -158,7 +158,6 @@ def train():
     else:
         best = search_model(args, pool, X, y, Xstatic, ystatic)
     
-    X = [np.array(x) for x in X + Xstatic]
     y = y + ystatic
     le = LabelEncoder().fit(y)
     y = le.transform(y)
@@ -194,15 +193,27 @@ def predict():
     
     with open(args.output, "w") as f:
         for item in item_iterator(args.input):
-            x = np.array(item[NAME])
+            x = loadvector(item)
+            # x = x / sum(x)
             hy = le.inverse_transform(classifier.predict([x]))
-            item["predicted"] = item[KLASS] = hy[0]
+            item["predicted"] = item[KLASS] = int(hy[0])
             if hasattr(classifier, "decision_function"):
                 item["decision_function"] = classifier.decision_function([x])[0]
             else:
                 item["predict_proba"] = classifier.predict_proba([x])[0].tolist()
 
             print(json.dumps(item), file=f)
+
+
+def loadvector(item):
+    if 'vecsize' in item:
+        x = np.zeros(item['vecsize'], dtype=np.float64)
+        for _i, _x in item[NAME]:
+            x[_i] = _x
+    else:
+        x = np.array(item[NAME])
+
+    return x
 
 
 if __name__ == '__main__':

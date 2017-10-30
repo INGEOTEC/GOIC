@@ -93,7 +93,6 @@ class PowerGridVariable:
             L.append((randint(0, self.nrows),
                       randint(0, self.ncols)))
 
-
         return list(set(L))
 
     def neighborhood(self, value):
@@ -161,10 +160,12 @@ DefaultParams = {
     "cells_per_block": SetVariable([(2, 2), (3, 3)]),
     # "cells_per_block": Fixed((3, 3)),
     # "vector": SetVariable(["hog", "pi-hog", "orb", "hog-orb", "lbp-hog"])
-    "vector": Fixed("lbp-hog"),
-    #"channels": SetVariable(["green", "rgb"]),
+    "vector": Fixed("hog"),
+    # "vector": Fixed("lbp-hog"),
+    # "channels": SetVariable(["green", "rgb"]),
     "channels": Fixed("rgb"),
-    "correlation":SetVariable(["none", "yes"])
+    # "correlation":SetVariable(["none", "yes"])
+    "correlation": Fixed(False)  # "/home/daniela/GOIC/GOIC/mascara.png"
 }
 
 

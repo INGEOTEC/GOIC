@@ -42,11 +42,17 @@ function run_gold() {
 	    '{"type": "mlp", "hidden_layer_sizes": [32, 16]}' \
 	    '{"type": "knn", "n_neighbors": 11, "weights": "distance"}' \
 	    '{"type": "sgd", "loss": "hinge", "penalty": "l2"}' \
+	    '{"type": "sgd", "loss": "squared_hinge", "penalty": "l2"}' \
 	    '{"type": "sgd", "loss": "log", "penalty": "l2"}'
 	do
 	    suffix=$(echo "$classifier" | perl -ne 's/["\{\}\s,:]+/_/g; print')
 	    outname=$__outname.$suffix
 	    
+	    if [ -e "$outname".model ]
+	    then
+		continue
+	    fi
+
 	    export classifier
 	    if [ ! -f "$outname".model ]
 	    then

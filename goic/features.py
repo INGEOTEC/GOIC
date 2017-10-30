@@ -69,10 +69,10 @@ def get_vector(obj, path_file):
 
     if obj.contrast == 'sub-mean':
         for i in range(3):
-            imagen[:,:,i] = imagen[:,:,i] - imagen[:,:,i].mean()
+            imagen[:, :, i] = imagen[:, :, i] - imagen[:, :, i].mean()
 
     if obj.channels == "green":
-        imagen = imagen[:,:,1]
+        imagen = imagen[:, :, 1]
     else:
         imagen = rgb2gray(imagen)
 
@@ -80,7 +80,7 @@ def get_vector(obj, path_file):
         if obj.equalize == 'global':
             imagen = exposure.equalize_hist(imagen)
         else:
-            d = int(obj.equalize.split(':')[-1] or 30)
+            d = int(obj.equalize.split(':')[-1])
             imagen = rank.equalize(imagen, selem=disk(d))
 
     if obj.edges != 'none':
@@ -93,15 +93,14 @@ def get_vector(obj, path_file):
         elif obj.edges == 'roberts':
             imagen = roberts(imagen)
         else:
-            raise ArgumentException("Unknown edge detector {0}".format(obj.edges))
+            raise Exception("Unknown edge detector {0}".format(obj.edges))
 
-
-    if obj.correlation == 'yes':
-        mascara = io.imread("/home/daniela/GOIC/GOIC/mascara.png")
+    if obj.correlation:
+        mascara = io.imread(obj.correlation)
         mascara = rgb2gray(mascara)
         mascara = np.array(mascara)
-        mascara = skimage.transform.resize(mascara, (25,25), mode='edge')
-        resultado =  match_template(imagen, mascara)
+        mascara = skimage.transform.resize(mascara, (25, 25), mode='edge')
+        resultado = match_template(imagen, mascara)
         resultado = resultado + abs(resultado.min())
         resultado[~((resultado < 0.2) | (resultado > resultado.max()-0.2))] = 0.6
         img = resultado

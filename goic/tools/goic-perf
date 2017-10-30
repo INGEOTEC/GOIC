@@ -66,8 +66,11 @@ def performance(gold, predicted, output=None, avgf1=None):
     report['macrof1accuracy'] = report['accuracy'] * report['macrof1']
 
     if len(f1) == 2:
-        report['macro-auc'] = roc_auc_score(y, hy, average='macro')
-        report['micro-auc'] = roc_auc_score(y, hy, average='micro')
+        report['macro-auc-prob'] = roc_auc_score(y, hy, average='macro')
+        report['micro-auc-prob'] = roc_auc_score(y, hy, average='micro')
+        _hy = hy * 0.5 + 0.5
+        report['macro-auc-df'] = roc_auc_score(y, _hy, average='macro')
+        report['micro-auc-df'] = roc_auc_score(y, _hy, average='micro')
     else:
         try:
             report.update(auc(gold, predicted))
