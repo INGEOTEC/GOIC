@@ -148,6 +148,7 @@ class ScoreKFoldWrapper(ScoreSampleWrapper):
         if isinstance(args, (tuple, list)):
             conf, code = args
             create_classifier = self.create_classifier
+            model = None
         else:
             conf = args.copy()
             classifier = args.pop("type")
