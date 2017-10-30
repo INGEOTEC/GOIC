@@ -49,14 +49,14 @@ CONFIGURATIONS = [
         {"type": LinearSVC, "C": 10, "class_weight": "balanced"},
         {"type": LinearSVC, "C": 1, "class_weight": "balanced"},
         {"type": LinearSVC, "C": 0.1, "class_weight": "balanced"},
-        {"type": SVC, "kernel": "rbf", "C": 1},
-        {"type": SVC, "kernel": "rbf", "C": 10},
-        {"type": SVC, "kernel": "rbf", "C": 0.1},
-        {"type": SVC, "kernel": "poly", "degree": 2},
-        {"type": GaussianNB},
-        {"type": MultinomialNB},
-        {"type": MLPClassifier, "hidden_layer_sizes": [32, 16]},
-        {"type": MLPClassifier, "hidden_layer_sizes": [32, 16, 8]},
+        #{"type": SVC, "kernel": "rbf", "C": 1},
+        #{"type": SVC, "kernel": "rbf", "C": 10},
+        #{"type": SVC, "kernel": "rbf", "C": 0.1},
+	#        {"type": SVC, "kernel": "poly", "degree": 2},
+       	# {"type": GaussianNB},
+	#        {"type": MultinomialNB},
+        # {"type": MLPClassifier, "hidden_layer_sizes": [32, 16]},
+	#        {"type": MLPClassifier, "hidden_layer_sizes": [32, 16, 8]},
         {"type": KNeighborsClassifier, "n_neighbors": 3, "weights": "uniform"},
         {"type": KNeighborsClassifier, "n_neighbors": 11, "weights": "uniform"},
         {"type": KNeighborsClassifier, "n_neighbors": 3, "weights": "distance"},
@@ -192,18 +192,12 @@ def predict():
     with open(args.model, "rb") as f:
         classifier, le = pickle.load(f)
     
-    def asobj(x):
-        try:
-            return int(x)
-        except ValueError:
-            return str(x)
-        
     with open(args.output, "w") as f:
         for item in item_iterator(args.input):
             x = loadvector(item)
             # x = x / sum(x)
-            hy = [asobj(u) for u in le.inverse_transform(classifier.predict([x]))]
-            item["predicted"] = item[KLASS] = hy[0]
+            hy = le.inverse_transform(classifier.predict([x]))
+            item["predicted"] = item[KLASS] = str(hy[0])
             if hasattr(classifier, "decision_function"):
                 item["decision_function"] = classifier.decision_function([x])[0].tolist()
             else:
