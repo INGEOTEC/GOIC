@@ -72,6 +72,10 @@ def get_vector(obj, path_file):
 
     if obj.channels == "green":
         imagen = imagen[:, :, 1]
+    elif obj.channels == "blue":
+        imagen = imagen[:, 1, :]
+    elif obj.channels == "red":
+        imagen = imagen[1, :, :]
     else:
         imagen = rgb2gray(imagen)
 
@@ -115,11 +119,13 @@ def get_vector(obj, path_file):
         sumG = suma_imagenes(GG)
     else:
         sumG = GG[0]
+    
     # Una vez calculadas las imagenes sacamos el HOG
     # vec = hog(sumG, orientations=8, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L2-#Hys')
     orientations = 8
     if obj.vector == 'hog':
-        vec = hog(sumG, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block)
+        # print(sumG.shape, obj.cells_per_block, obj.pixels_per_cell, file=sys.stderr)
+        vec = hog(sumG, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L2-Hys')
     elif obj.vector == 'hog-vow':
         # vec = daisy(sumG, step=64, radius=32, rings=3).flatten()
         m = orientations * obj.cells_per_block[0] * obj.cells_per_block[1]

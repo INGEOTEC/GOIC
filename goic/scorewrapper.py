@@ -169,11 +169,12 @@ class ScoreKFoldWrapper(ScoreSampleWrapper):
             if len(self.ystatic) > 0:
                 trainY = np.hstack((trainY, self.ystatic))
 
+            print(model, args, type(args), file=sys.stderr)
             if model is None:
-                model = Features(A, **conf)                
-                # model = Features([X[i] for i in train], **conf)
-                trainX = [model[x] for x in A]
-                testX = [model[self.X[i]] for i in test]
+                _model = Features(A, **conf)                
+                # _model = Features([X[i] for i in train], **conf)
+                trainX = [_model[x] for x in A]
+                testX = [_model[self.X[i]] for i in test]
             else:
                 trainX = [model(x) for x in A]
                 testX = [model(self.X[i]) for i in test]

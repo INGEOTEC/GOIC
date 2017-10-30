@@ -35,43 +35,28 @@ function run_gold() {
 	    __outname=$_outname.k=$k
 	fi
 
-	for classifier in '{"type": "linearsvm"}' \
-	    '{"type": "svm", "kernel": "rbf", "C": 1}' \
-	    '{"type": "svm", "kernel": "rbf", "C": 10}' \
-	    '{"type": "svm", "kernel": "rbf", "C": 0.1}' \
-	    '{"type": "mlp", "hidden_layer_sizes": [32, 16]}' \
-	    '{"type": "knn", "n_neighbors": 11, "weights": "distance"}' \
-	    '{"type": "sgd", "loss": "hinge", "penalty": "l2"}' \
-	    '{"type": "sgd", "loss": "squared_hinge", "penalty": "l2"}' \
-	    '{"type": "sgd", "loss": "log", "penalty": "l2"}'
-	do
-	    suffix=$(echo "$classifier" | perl -ne 's/["\{\}\s,:]+/_/g; print')
-	    outname=$__outname.$suffix
-	    
-	    if [ -e "$outname".model ]
-	    then
-		continue
-	    fi
+	#suffix='' # $(echo "$classifier" | perl -ne 's/["\{\}\s,:]+/_/g; print')
+	# outname=$__outname.$suffix
+	outname=$__outname
+	
+	if [ ! -f "$outname".model ]
+	then
+	    goic-train $train -m $_outname.params -i $k -o $outname.model
+	fi
+	
+	if [ -f $outname.model ]
+	then
+	    goic-predict $test -m $outname.model -o $outname.predicted.json
+	fi
+	
+	goic-perf $test $outname.predicted.json -o $outname.results
+	echo "### $outname.results ###"
+	cat $outname.results | python -mjson.tool
+	
+	echo "### execute the following commands to convert both the training and test set ###"
+	echo goic-model $train -m $outname.model -o $outname.train.vspace.json
+	echo goic-model $test -m $outname.model -o $outname.test.vspace.json
 
-	    export classifier
-	    if [ ! -f "$outname".model ]
-	    then
-		goic-train $train -m $_outname.params -i $k -o $outname.model
-	    fi
-	    
-	    if [ -f $outname.model ]
-	    then
-		goic-predict $test -m $outname.model -o $outname.predicted.json
-	    fi
-	    
-	    goic-perf $test $outname.predicted.json -o $outname.results
-	    echo "### $outname.results ###"
-	    cat $outname.results | python -mjson.tool
-
-	    echo "### execute the following commands to convert both the training and test set ###"
-	    echo goic-model $train -m $outname.model -o $outname.train.vspace.json
-	    echo goic-model $test -m $outname.model -o $outname.test.vspace.json
-	done
     done
 }
 

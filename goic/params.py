@@ -146,8 +146,8 @@ def Boolean():
 
 
 DefaultParams = {
-    # "gabor": PowerGridVariable(7, 5, 8),
-    "gabor": Fixed([]),
+    "gabor": PowerGridVariable(7, 5, 8),
+    # "gabor": Fixed([]),
     # "resize": SetVariable([(320, 320), (380, 380), (270, 270), (420, 420)]),
     # "resize": Fixed((320, 320)),
     "resize": Fixed((225, 225)),
@@ -155,8 +155,8 @@ DefaultParams = {
     # "edges": SetVariable(['none', 'scharr', 'sobel', 'prewitt', 'roberts']),
     "edges": SetVariable(['none', 'scharr', 'sobel']),
     "contrast": SetVariable(['none', 'sub-mean']),
-    "pixels_per_cell": SetVariable([(32, 32), (64, 64), (128, 128)]),
-    # "pixels_per_cell": SetVariable([(16, 16), (24, 24), (32, 32)]),
+    #"pixels_per_cell": SetVariable([(32, 32), (64, 64), (128, 128)]),
+    "pixels_per_cell": SetVariable([(16, 16), (24, 24), (32, 32)]),
     # "pixels_per_cell": Fixed((32, 32)),
     "cells_per_block": SetVariable([(2, 2), (3, 3)]),
     # "cells_per_block": Fixed((3, 3)),
