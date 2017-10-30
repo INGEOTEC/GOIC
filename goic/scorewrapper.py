@@ -53,7 +53,7 @@ class ScoreSampleWrapper(object):
         self.test_y = y[test]
 
     def __call__(self, args):
-        print("testing SampleWrapper: ", args, file=sys.stderr)
+        # ("testing SampleWrapper: ", args, file=sys.stderr)
 
         if isinstance(args, (tuple, list)):
             conf, code = args
@@ -144,7 +144,7 @@ class ScoreKFoldWrapper(ScoreSampleWrapper):
         self.kfolds = cross_validation.StratifiedKFold(y, n_folds=nfolds, shuffle=True, random_state=random_state)
 
     def __call__(self, args):
-        print("testing kfolds: ", args, file=sys.stderr)
+        # print("testing kfolds: ", args, file=sys.stderr)
         if isinstance(args, (tuple, list)):
             conf, code = args
             create_classifier = self.create_classifier
@@ -169,7 +169,7 @@ class ScoreKFoldWrapper(ScoreSampleWrapper):
             if len(self.ystatic) > 0:
                 trainY = np.hstack((trainY, self.ystatic))
 
-            print(model, args, type(args), file=sys.stderr)
+            # print(model, args, type(args), file=sys.stderr)
             if model is None:
                 _model = Features(A, **conf)                
                 # _model = Features([X[i] for i in train], **conf)

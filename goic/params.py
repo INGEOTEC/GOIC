@@ -146,8 +146,8 @@ def Boolean():
 
 
 DefaultParams = {
-    "gabor": PowerGridVariable(7, 5, 8),
-    # "gabor": Fixed([]),
+    #"gabor": PowerGridVariable(7, 5, 8),
+    "gabor": Fixed([]),
     # "resize": SetVariable([(320, 320), (380, 380), (270, 270), (420, 420)]),
     # "resize": Fixed((320, 320)),
     "resize": Fixed((225, 225)),
