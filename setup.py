@@ -20,7 +20,7 @@ setup(
         'Programming Language :: Python :: 3',
         "Topic :: Scientific/Engineering :: Artificial Intelligence"],
 
-    packages=['goic', 'goic/tests', 'goic/tools'],
+    packages=['goic', 'goic/tools'],
     include_package_data=True,
     zip_safe=False,
     package_data={
@@ -30,6 +30,7 @@ setup(
         'goic/tools/goic-train',
         'goic/tools/goic-predict',
         'goic/tools/goic-params',
+        'goic/tools/goic-optc',
         'goic/tools/goic-model',
         'goic/tools/goic-perf',
         'goic/tools/goic-kfolds'
