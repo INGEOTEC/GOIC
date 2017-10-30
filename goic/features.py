@@ -18,7 +18,6 @@ from skimage.feature import ORB, match_descriptors, local_binary_pattern
 from skimage.feature import match_template
 
 
-
 def convertir_bi_uni(lista_tupla):
     indices = []
     for i in lista_tupla:
@@ -121,10 +120,10 @@ def get_vector(obj, path_file):
     orientations = 8
     if obj.vector == 'hog':
         vec = hog(sumG, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block)
+    elif obj.vector == 'hog-vow':
         # vec = daisy(sumG, step=64, radius=32, rings=3).flatten()
-        # if obj.vector == 'pi-hog':
-        #    m = orientations * obj.cells_per_block[0] * obj.cells_per_block[#1]
-        #    XX = np.split(vec, len(vec) // m)
+        m = orientations * obj.cells_per_block[0] * obj.cells_per_block[1]
+        XX = np.split(vec, len(vec) // m)
         # X = [(float(entropy(x)), x) for x in XX]
         # X = [(np.random.rand(), x) for x in XX]
         # print(X[:4])
@@ -166,7 +165,7 @@ def suma_imagenes(lista_imgs):
 
 
 class Features:
-    def __init__(self, docs, gabor, resize=(270, 270), equalize=False, edges='none', pixels_per_cell=(32, 32), cells_per_block=(3,3), contrast='none', vector='hog',channels='rgb',correlation='yes', **kwargs):
+    def __init__(self, docs, gabor, resize=(270, 270), equalize=False, edges='none', pixels_per_cell=(32, 32), cells_per_block=(3,3), contrast='none', vector='hog', channels='rgb', correlation='yes', **kwargs):
         self.gabor = gabor
         self.resize = resize
         self.kernels = generacion_kernels()

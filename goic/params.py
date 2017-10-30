@@ -146,10 +146,11 @@ def Boolean():
 
 
 DefaultParams = {
-    "gabor": PowerGridVariable(7, 5, 8),
+    # "gabor": PowerGridVariable(7, 5, 8),
+    "gabor": [],
     # "resize": SetVariable([(320, 320), (380, 380), (270, 270), (420, 420)]),
     # "resize": Fixed((320, 320)),
-    "resize": Fixed((270, 270)),
+    "resize": Fixed((225, 225)),
     "equalize": SetVariable(['none', 'local:10', 'global']),
     # "edges": SetVariable(['none', 'scharr', 'sobel', 'prewitt', 'roberts']),
     "edges": SetVariable(['none', 'scharr', 'sobel']),
