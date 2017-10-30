@@ -191,14 +191,20 @@ def predict():
     with open(args.model, "rb") as f:
         classifier, le = pickle.load(f)
     
+    def asobj(x):
+        try:
+            return int(x)
+        except ValueError:
+            return str(x)
+        
     with open(args.output, "w") as f:
         for item in item_iterator(args.input):
             x = loadvector(item)
             # x = x / sum(x)
-            hy = le.inverse_transform(classifier.predict([x]))
-            item["predicted"] = item[KLASS] = int(hy[0])
+            hy = [asobj(u) for u in le.inverse_transform(classifier.predict([x]))]
+            item["predicted"] = item[KLASS] = hy[0]
             if hasattr(classifier, "decision_function"):
-                item["decision_function"] = classifier.decision_function([x])[0]
+                item["decision_function"] = classifier.decision_function([x])[0].tolist()
             else:
                 item["predict_proba"] = classifier.predict_proba([x])[0].tolist()
 

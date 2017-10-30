@@ -54,8 +54,8 @@ function run_gold() {
 	cat $outname.results | python -mjson.tool
 	
 	echo "### execute the following commands to convert both the training and test set ###"
-	echo goic-model $train -m $outname.model -o $outname.train.vspace.json
-	echo goic-model $test -m $outname.model -o $outname.test.vspace.json
+	goic-model $train -m $outname.model -o $outname.train.vspace.json
+	goic-model $test -m $outname.model -o $outname.test.vspace.json
 
     done
 }
