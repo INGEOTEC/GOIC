@@ -16,176 +16,159 @@ import sys
 from scipy.stats import entropy
 from skimage.feature import ORB, match_descriptors, local_binary_pattern
 from skimage.feature import match_template
-
-
-def convertir_bi_uni(lista_tupla):
-    indices = []
-    for i in lista_tupla:
-        indice = (i[0] * 8 + i[1])
-        indices.append(indice)
-
-    return indices
-
-
-def kernels_subset(kernels, indices):
-    kernels_copy = []
-    for i in indices:
-        kernels_copy.append(kernels[i])
-    return(kernels_copy)
-
-
-def generacion_kernels():
-    kernels = []  # Aquí se guardan los filtros que vamos a generar
-    # thetas = frange(0,((7*np.pi)/8),pi/8)
-    theta = 0
-    while theta <= 7 * np.pi / 8:
-        # for theta in thetas:
-        sigma = 2*np.pi
-        for frequency in (0.10, 0.15, 0.20, 0.25, 0.35):
-            kernel = np.real(gabor_kernel(frequency, theta=theta,sigma_x=sigma, sigma_y=sigma))
-            kernels.append(kernel)
-        theta += np.pi / 8
-    return kernels
-
-
-def compute_feats(image, kernels):
-    # feats = np.zeros((len(kernels), 2), dtype=np.double)
-    results = []
-    for k, kernel in enumerate(kernels):
-        filtered = filter.convolve(image, kernel, mode='wrap')
-        results.append(filtered)
-
-    return results
-
-
-def get_vector(obj, path_file):
-    #Tomo los indices de la configuracion
-    indices = convertir_bi_uni(obj.gabor)
-    k = kernels_subset(obj.kernels, indices)
-    # imagen = io.imread(path_file, as_grey=True)
-    imagen = io.imread(path_file)
-    imagen = resize(imagen, obj.resize, mode='edge')
-
-    if obj.contrast == 'sub-mean':
-        for i in range(3):
-            imagen[:, :, i] = imagen[:, :, i] - imagen[:, :, i].mean()
-
-    if obj.channels == "green":
-        imagen = imagen[:, :, 1]
-    elif obj.channels == "blue":
-        imagen = imagen[:, 1, :]
-    elif obj.channels == "red":
-        imagen = imagen[1, :, :]
-    else:
-        imagen = rgb2gray(imagen)
-
-    if obj.equalize != 'none':
-        if obj.equalize == 'global':
-            imagen = exposure.equalize_hist(imagen)
-        else:
-            d = int(obj.equalize.split(':')[-1])
-            imagen = rank.equalize(imagen, selem=disk(d))
-
-    if obj.edges != 'none':
-        if obj.edges == 'sobel':
-            imagen = sobel(imagen)
-        elif obj.edges == 'scharr':
-            imagen = scharr(imagen)
-        elif obj.edges == 'prewitt':
-            imagen = prewitt(imagen)
-        elif obj.edges == 'roberts':
-            imagen = roberts(imagen)
-        else:
-            raise Exception("Unknown edge detector {0}".format(obj.edges))
-
-    if obj.correlation:
-        mascara = io.imread(obj.correlation)
-        mascara = rgb2gray(mascara)
-        mascara = np.array(mascara)
-        mascara = skimage.transform.resize(mascara, (25, 25), mode='edge')
-        resultado = match_template(imagen, mascara)
-        resultado = resultado + abs(resultado.min())
-        resultado[~((resultado < 0.2) | (resultado > resultado.max()-0.2))] = 0.6
-        img = resultado
-    else:
-        img = img_as_float(imagen)
-
-    GG = []
-    #Se calcula la Gabor image para cada filtro especificado
-    GG = compute_feats(img, k)
-    if(len(obj.gabor) == 0):
-        sumG = img
-    elif(len(obj.gabor) > 1):
-        sumG = suma_imagenes(GG)
-    else:
-        sumG = GG[0]
-    
-    # Una vez calculadas las imagenes sacamos el HOG
-    # vec = hog(sumG, orientations=8, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L2-#Hys')
-    orientations = 8
-    if obj.vector == 'hog':
-        # print(sumG.shape, obj.cells_per_block, obj.pixels_per_cell, file=sys.stderr)
-        vec = hog(sumG, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block, block_norm='L2-Hys')
-    elif obj.vector == 'hog-vow':
-        # vec = daisy(sumG, step=64, radius=32, rings=3).flatten()
-        m = orientations * obj.cells_per_block[0] * obj.cells_per_block[1]
-        XX = np.split(vec, len(vec) // m)
-        # X = [(float(entropy(x)), x) for x in XX]
-        # X = [(np.random.rand(), x) for x in XX]
-        # print(X[:4])
-        # X.sort()
-        # return np.concatenate([np.random.rand(m) for x in XX])
-        # return np.concatenate([x[-1] for x in X])
-    elif obj.vector == 'orb':
-        ORB_D = ORB(n_scales=8, n_keypoints=10)
-        ORB_D.detect_and_extract(sumG)
-        D_ORB = ORB_D.descriptors
-        # volvemos la matriz a vector
-        vec = np.reshape(D_ORB, (np.product(D_ORB.shape)))
-
-    elif obj.vector == 'hog-orb':
-        vec = hog(sumG, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block)
-        ORB_D = ORB(n_scales=8, n_keypoints=10)
-        ORB_D.detect_and_extract(sumG)
-        D_ORB = ORB_D.descriptors
-        # volvemos la matriz a vector
-        o = np.reshape(D_ORB, (np.product(D_ORB.shape)))
-        vec = np.concatenate((vec, o), axis=1)
-    elif obj.vector == 'lbp-hog':
-        LBP = local_binary_pattern(sumG, 3, 3, method='default')
-        vec = hog(LBP, orientations=orientations, pixels_per_cell=obj.pixels_per_cell, cells_per_block=obj.cells_per_block)
-    else:
-        raise Exception("Unknown feature detection {0}".format(obj.vector))
-
-    return vec
-
-
-def suma_imagenes(lista_imgs):
-    size = lista_imgs[0].shape
-    r = np.zeros(size)
-
-    for x in lista_imgs:
-        r += x
-
-    return(r)
-
+from sklearn.cluster import KMeans
 
 class Features:
-    def __init__(self, docs, gabor, resize=(270, 270), equalize=False, edges='none', pixels_per_cell=(32, 32), cells_per_block=(3,3), contrast='none', vector='hog', channels='rgb', correlation='yes', **kwargs):
-        self.gabor = gabor
+    def __init__(self,
+                docs,
+                resize=(225, 225),
+                equalize=False,
+                edges='none',
+                pixels_per_cell=(8, 8),
+                cells_per_block=(3, 3),
+                contrast='none',
+                features='hog-vow',
+                channels='rgb',
+                correlation='yes',
+                sample_size=1000000,
+                num_centers=1000,
+                encoding='hist',
+                **kwargs):
+
         self.resize = resize
-        self.kernels = generacion_kernels()
         self.equalize = equalize
         self.pixels_per_cell = pixels_per_cell
         self.cells_per_block = cells_per_block
         self.edges = edges
         self.contrast = contrast
-        self.vector = vector
+        self.features = features
         self.channels = channels
         self.correlation = correlation
+        self.encoding = encoding
+        self.train_features = {}  # a hack to avoid the training double processing of the whole dataset
+        vectors = []
+        for filename in docs:
+            V = []
+            for vec in self.compute_features(filename):
+                V.append(vec)
+                vectors.append(vec)
+
+            self.train_features[filename] = V
+        
+        print("the training set contains {0} vectors".format(len(vectors)), file=sys.stderr)
+        if len(vectors) > sample_size:
+            vectors = np.random.choice(vectors, sample_size)
+            print("we kept {0} vectors, randomly selected".format(len(vectors)), file=sys.stderr)
+
+        self.model = KMeans(num_centers)
+
+        print("preparing to fit our codebook", file=sys.stderr)
+        self.model.fit(vectors)
+        vectors = None
+
+        print("encoding our training vectors", file=sys.stderr)
+        for filename, veclist in self.train_features.items():
+            self.train_features[filename] = self.encode(veclist)
+
+        print("our feature module is fitted", file=sys.stderr)
+    
+    def encode(self, veclist):
+        if self.encoding == 'hist':
+            return self.hist(veclist)
+        elif self.encoding == 'seq':
+            return self.sequence(veclist)
+        else:
+            raise Exception("Unknown feature encoding {0}".format(self.encoding))
+
+    def sequence(self, veclist):
+        seq = []
+        for vec in veclist:
+            c = np.argmin(self.model.transform(vec))
+            seq.append(c)
+
+        return seq
+
+    def hist(self, veclist):
+        h = np.zeros(self.model.n_clusters)
+        for vec in veclist:
+            c = np.argmin(self.model.transform(vec))
+            h[c] += 1
+
+        return h
 
     def __getitem__(self, filename):
         # print("==== processing", filename, ", gabor: ", self.gabor, ", resize: ",  self.resize, file=sys.stderr)
-        x = get_vector(self, filename)
-        # print(len(x), file=sys.stderr)
-        return x
+        if self.train_features:
+            s = self.train_features.get(filename, None)
+            if s:
+                return s
+    
+            self.train_features = None  # if we reach this code we are beyond the training phase
+    
+        return self.encode(self.compute_features(filename))
+
+    def compute_features(self, path_file):
+        imagen = io.imread(path_file)
+        imagen = resize(imagen, self.resize, mode='edge')
+
+        if self.contrast == 'sub-mean':
+            for i in range(3):
+                imagen[:, :, i] = imagen[:, :, i] - imagen[:, :, i].mean()
+
+        if self.channels == "green":
+            imagen = imagen[:, :, 1]
+        elif self.channels == "blue":
+            imagen = imagen[:, 1, :]
+        elif self.channels == "red":
+            imagen = imagen[1, :, :]
+        else:
+            imagen = rgb2gray(imagen)
+
+        if self.equalize != 'none':
+            if self.equalize == 'global':
+                imagen = exposure.equalize_hist(imagen)
+            else:
+                d = int(self.equalize.split(':')[-1])
+                imagen = rank.equalize(imagen, selem=disk(d))
+
+        if self.edges != 'none':
+            if self.edges == 'sobel':
+                imagen = sobel(imagen)
+            elif self.edges == 'scharr':
+                imagen = scharr(imagen)
+            elif self.edges == 'prewitt':
+                imagen = prewitt(imagen)
+            elif self.edges == 'roberts':
+                imagen = roberts(imagen)
+            else:
+                raise Exception("Unknown edge detector {0}".format(self.edges))
+
+        if self.correlation:
+            mascara = io.imread(self.correlation)
+            mascara = rgb2gray(mascara)
+            mascara = np.array(mascara)
+            mascara = skimage.transform.resize(mascara, (25, 25), mode='edge')
+            resultado = match_template(imagen, mascara)
+            resultado = resultado + abs(resultado.min())
+            resultado[~((resultado < 0.2) | (resultado > resultado.max()-0.2))] = 0.6
+            img = resultado
+        else:
+            img = img_as_float(imagen)
+
+        if self.features.startswith('hog'):
+            orientations = 8
+            vec = hog(img, orientations=orientations, pixels_per_cell=self.pixels_per_cell, cells_per_block=self.cells_per_block, block_norm='L2-Hys')
+
+            if self.features == 'hog':
+                return [vec]
+            elif self.features == 'hog-bovw':
+                m = orientations * self.cells_per_block[0] * self.cells_per_block[1]
+                XX = np.split(vec, len(vec) // m)
+                return XX
+            else:
+                raise Exception("Unknown feature detection {0}".format(self.features))
+
+        elif self.features == 'daisy':
+            return daisy(img, step=32, radius=16, rings=3).flatten()
+        else:
+            raise Exception("Unknown feature detection {0}".format(self.features))
