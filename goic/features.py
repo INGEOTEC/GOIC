@@ -30,8 +30,8 @@ class Features:
                 features='hog-vow',
                 channels='rgb',
                 correlation='yes',
-                sample_size=1000000,
-                num_centers=1000,
+                sample_size=50000,
+                num_centers=223,
                 encoding='hist',
                 **kwargs):
 
