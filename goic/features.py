@@ -20,20 +20,20 @@ from sklearn.cluster import KMeans
 
 class Features:
     def __init__(self,
-                docs,
-                resize=(225, 225),
-                equalize=False,
-                edges='none',
-                pixels_per_cell=(8, 8),
-                cells_per_block=(3, 3),
-                contrast='none',
-                features='hog-vow',
-                channels='rgb',
-                correlation='yes',
-                sample_size=50000,
-                num_centers=223,
-                encoding='hist',
-                **kwargs):
+                 docs,
+                 resize=(225, 225),
+                 equalize=False,
+                 edges='none',
+                 pixels_per_cell=(8, 8),
+                 cells_per_block=(3, 3),
+                 contrast='none',
+                 features='hog-vow',
+                 channels='rgb',
+                 correlation='yes',
+                 sample_size=50000,
+                 num_centers=223,
+                 encoding='hist',
+                 **kwargs):
 
         self.resize = resize
         self.equalize = equalize
@@ -57,7 +57,8 @@ class Features:
         
         print("the training set contains {0} vectors".format(len(vectors)), file=sys.stderr)
         if len(vectors) > sample_size:
-            vectors = np.random.choice(vectors, sample_size)
+            np.random.shuffle(vectors)
+            vectors = vectors[:sample_size]
             print("we kept {0} vectors, randomly selected".format(len(vectors)), file=sys.stderr)
 
         self.model = KMeans(num_centers, verbose=1)
@@ -86,7 +87,7 @@ class Features:
             c = np.argmin(self.model.transform(vec))
             seq.append(c)
 
-        return seq
+        return np.array(seq, dtype=np.int32)
 
     def hist(self, veclist):
         h = np.zeros(self.model.n_clusters)
@@ -115,12 +116,12 @@ class Features:
             for i in range(3):
                 imagen[:, :, i] = imagen[:, :, i] - imagen[:, :, i].mean()
 
-        if self.channels == "green":
+        if self.channels == "red":
+            imagen = imagen[:, :, 0]
+        elif self.channels == "green":
             imagen = imagen[:, :, 1]
         elif self.channels == "blue":
-            imagen = imagen[:, 1, :]
-        elif self.channels == "red":
-            imagen = imagen[1, :, :]
+            imagen = imagen[:, :, 2]
         else:
             imagen = rgb2gray(imagen)
 
