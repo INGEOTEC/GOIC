@@ -60,9 +60,9 @@ class Features:
             vectors = np.random.choice(vectors, sample_size)
             print("we kept {0} vectors, randomly selected".format(len(vectors)), file=sys.stderr)
 
-        self.model = KMeans(num_centers)
+        self.model = KMeans(num_centers, verbose=1)
 
-        print("preparing to fit our codebook", file=sys.stderr)
+        print("preparing to fit our codebook with {0} centers".format(num_centers), file=sys.stderr)
         self.model.fit(vectors)
         vectors = None
 
