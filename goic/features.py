@@ -86,7 +86,7 @@ class Features:
             c = np.argmin(self.model.transform(vec))
             seq.append(c)
 
-        return seq
+        return np.array(seq, dtype=np.int32)
 
     def hist(self, veclist):
         h = np.zeros(self.model.n_clusters)

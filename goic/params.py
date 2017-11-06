@@ -166,7 +166,9 @@ DefaultParams = {
     # "channels": SetVariable(["green", "rgb"]),
     "channels": Fixed("rgb"),
     # "correlation":SetVariable(["none", "yes"])
-    "correlation": Fixed(False)  # "/home/daniela/GOIC/GOIC/mascara.png"
+    "correlation": Fixed(False),  # "/home/daniela/GOIC/GOIC/mascara.png",
+    "sample_size": Fixed(10000),
+    "num_centers": Fixed(223)
 }
 
 
