@@ -136,21 +136,15 @@ class CommandLine(object):
                 fun_score = ScoreKFoldWrapper(X, y, Xstatic=Xstatic, ystatic=ystatic, nfolds=int(ratio), score=self.data.score, random_state=self.data.seed)
             else:
                 fun_score = ScoreSampleWrapper(X, y, Xstatic=Xstatic, ystatic=ystatic, ratio=ratio, score=self.data.score, random_state=self.data.seed)
-
-        def fix_gabor(b):
-            for item in b:
-                item['gabor'] = [(a, b) for a, b in item['gabor'] ]
-
-            return b
         
         if self.data.best_list:
-            best_list = fix_gabor(load_json(self.data.best_list))
+            best_list = load_json(self.data.best_list)
         else:
             best_list = None
 
         if self.data.conf:
             conf = json.loads(self.data.conf)
-            conf['gabor'] = [(a, b) for a, b in conf['gabor'] ]
+            # conf['gabor'] = [(a, b) for a, b in conf['gabor'] ]
             best_list = sel.get_best(fun_score, (conf, 'direct-input'))
         else:
             best_list = sel.search(

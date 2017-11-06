@@ -114,7 +114,8 @@ class ScoreSampleWrapper(object):
             m *= x + 0.0001
 
         conf['_geometricf1'] = m
-        conf['_harmonicf1'] = len(conf['_all_f1']) / sum([1/(x+0.0001)  for x in conf['_all_f1'].values()])  # the extra 0.0001 is introduced to avoid divisions by zero
+        # the extra 0.0001 is introduced to avoid divisions by zero
+        conf['_harmonicf1'] = len(conf['_all_f1']) / sum([1/(x+0.0001) for x in conf['_all_f1'].values()])
 
         conf['_accuracy'] = accuracy_score(self.test_y, hy)
         conf['_macrof1accuracy'] = conf["_macrof1"] * conf["_accuracy"]

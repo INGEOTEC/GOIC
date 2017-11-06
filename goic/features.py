@@ -24,21 +24,23 @@ class Features:
                  resize=(225, 225),
                  equalize=False,
                  edges='none',
-                 pixels_per_cell=(8, 8),
-                 cells_per_block=(3, 3),
+                 daisy_step=4,
+                 daisy_radius=15,
+                 daisy_rings=3,
                  contrast='none',
                  features='hog-vow',
                  channels='rgb',
                  correlation='yes',
-                 sample_size=50000,
+                 sample_size=10000,
                  num_centers=223,
                  encoding='hist',
                  **kwargs):
 
         self.resize = resize
         self.equalize = equalize
-        self.pixels_per_cell = pixels_per_cell
-        self.cells_per_block = cells_per_block
+        self.daisy_step = daisy_step
+        self.daisy_radius = daisy_radius
+        self.daisy_rings = daisy_rings
         self.edges = edges
         self.contrast = contrast
         self.features = features
@@ -46,6 +48,7 @@ class Features:
         self.correlation = correlation
         self.encoding = encoding
         self.train_features = {}  # a hack to avoid the training double processing of the whole dataset
+
         vectors = []
         for filename in docs:
             V = []
@@ -61,7 +64,8 @@ class Features:
             vectors = vectors[:sample_size]
             print("we kept {0} vectors, randomly selected".format(len(vectors)), file=sys.stderr)
 
-        self.model = KMeans(num_centers, verbose=1)
+        # self.model = KMeans(num_centers, verbose=0)
+        self.model = KMeans(num_centers, n_jobs=-1)
 
         print("preparing to fit our codebook with {0} centers".format(num_centers), file=sys.stderr)
         self.model.fit(vectors)
@@ -91,8 +95,12 @@ class Features:
 
     def hist(self, veclist):
         h = np.zeros(self.model.n_clusters)
-        for vec in veclist:
-            c = np.argmin(self.model.transform(vec))
+        # for dists in self.model.transform(veclist):
+        #     c = np.argmin(dists)
+        #     dist = self.model.transform(vec)
+        for dists in self.model.transform(veclist):
+            # print("VEC TRANSFORM", type(vec), vec, file=sys.stderr)
+            c = np.argmin(dists)
             h[c] += 1
 
         return h
@@ -101,7 +109,7 @@ class Features:
         # print("==== processing", filename, ", gabor: ", self.gabor, ", resize: ",  self.resize, file=sys.stderr)
         if self.train_features:
             s = self.train_features.get(filename, None)
-            if s:
+            if s is not None:
                 return s
     
             self.train_features = None  # if we reach this code we are beyond the training phase
@@ -170,6 +178,14 @@ class Features:
                 raise Exception("Unknown feature detection {0}".format(self.features))
 
         elif self.features == 'daisy':
-            return daisy(img, step=32, radius=16, rings=3).flatten()
+            # L = daisy(img, step=32, radius=16, rings=3)
+            L = daisy(img, step=self.daisy_step, radius=self.daisy_radius, rings=self.daisy_rings)
+            V = []
+            ilen, jlen, klen = L.shape
+            for i in range(ilen):
+                for j in range(jlen):
+                    # print("DAISY::::>", L[i, j].shape, file=sys.stderr)
+                    V.append(L[i, j])
+            return V
         else:
             raise Exception("Unknown feature detection {0}".format(self.features))
