@@ -30,7 +30,7 @@ class Features:
                  contrast='none',
                  features='hog-vow',
                  channels='rgb',
-                 correlation='yes',
+                 correlation=False,
                  sample_size=10000,
                  num_centers=223,
                  encoding='hist',
@@ -57,7 +57,7 @@ class Features:
                 vectors.append(vec)
 
             self.train_features[filename] = V
-        
+
         print("the training set contains {0} vectors".format(len(vectors)), file=sys.stderr)
         if len(vectors) > sample_size:
             np.random.shuffle(vectors)
@@ -76,7 +76,7 @@ class Features:
             self.train_features[filename] = self.encode(veclist)
 
         print("our feature module is fitted", file=sys.stderr)
-    
+
     def encode(self, veclist):
         if self.encoding == 'hist':
             return self.hist(veclist)
@@ -111,14 +111,27 @@ class Features:
             s = self.train_features.get(filename, None)
             if s is not None:
                 return s
-    
+
             self.train_features = None  # if we reach this code we are beyond the training phase
-    
+
         return self.encode(self.compute_features(filename))
+
+    def graytorgb(self, im):
+        w, h = im.shape
+        rgb_im = np.empty((w, h, 3), dtype=np.uint8)
+        rgb_im[:, :, 0] = im
+        rgb_im[:, :, 1] = im
+        rgb_im[:, :, 2] = im
+
+        return rgb_im
 
     def compute_features(self, path_file):
         imagen = io.imread(path_file)
         imagen = resize(imagen, self.resize, mode='edge')
+
+        if(len(imagen.shape) != 3):
+            imagen = self.graytorgb(imagen)
+
 
         if self.contrast == 'sub-mean':
             for i in range(3):
