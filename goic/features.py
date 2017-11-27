@@ -32,8 +32,8 @@ class Features:
                  channels='rgb',
                  correlation=False,
                  sample_size=10000,
-                 num_centers=223,
-                 encoding='hist',
+                 num_centers=300,
+                 encoding='seq',
                  **kwargs):
 
         self.resize = resize

@@ -136,7 +136,7 @@ class CommandLine(object):
                 fun_score = ScoreKFoldWrapper(X, y, Xstatic=Xstatic, ystatic=ystatic, nfolds=int(ratio), score=self.data.score, random_state=self.data.seed)
             else:
                 fun_score = ScoreSampleWrapper(X, y, Xstatic=Xstatic, ystatic=ystatic, ratio=ratio, score=self.data.score, random_state=self.data.seed)
-        
+
         if self.data.best_list:
             best_list = load_json(self.data.best_list)
         else:
@@ -282,21 +282,52 @@ class CommandLinePredict(CommandLine):
         return L
 
 
+class CommandLineTrainModel(CommandLine):
+    def __init__(self):
+        self.parser = argparse.ArgumentParser(description='goic-trainmodel')
+        self.param_set()
+        self.training_set()
+        self.param_train()
+        self.version()
+
+    def param_train(self):
+        pa = self.parser.add_argument
+        pa('-m', '--model-params', dest='params_fname', type=str, required=True,
+           help="model params")
+        pa('-i', '--i-th', dest='position', type=int, default=0,  # best by default
+           help="i-th model in the set of configurations (defaults to the best, i.e., 0)")
+
+    def main(self, args=None):
+        self.data = self.parser.parse_args(args=args)
+        logging.basicConfig(level=self.data.verbose)
+        best = load_json(self.data.params_fname)[self.data.position]
+
+        corpus, labels = [], []
+        for train in self.data.training_set:
+            X_, y_ = read_data_labels(train)
+            corpus.extend(X_)
+            labels.extend(y_)
+
+        t = Features(corpus, **best)
+        with open(self.get_output(), 'wb') as fpt:
+            pickle.dump(t, fpt)
+
+        return t
+
 class CommandLineModel(CommandLinePredict):
-    def main(self):
-        self.data = self.parser.parse_args()
+    def main(self, args=None):
+        self.data = self.parser.parse_args(args=args)
         logging.basicConfig(level=self.data.verbose)
         model, svc, le = load_pickle(self.data.model)
         L = []
         with open(self.get_output(), 'w') as fpt:
             for tw in item_iterator(self.data.test_set):
-                tw["vec"] = [x for x in model[tw[NAME]]]
+                tw["text"] = [x for x in model[tw[NAME]]]
                 # tw["vecsize"] = svc.num_terms
                 L.append(tw)
                 print(json.dumps(tw), file=fpt)
 
         return L
-
 
 class CommandLineKfolds(CommandLineTrain):
     def __init__(self):
@@ -386,6 +417,9 @@ def model(*args, **kwargs):
     c = CommandLineModel()
     return c.main(*args, **kwargs)
 
+def trainmodel(*args, **kwargs):
+    c = CommandLineTrainModel()
+    return c.main(*args, **kwargs)
 
 def kfolds(*args, **kwargs):
     c = CommandLineKfolds()

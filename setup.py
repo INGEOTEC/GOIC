@@ -32,6 +32,7 @@ setup(
         'goic/tools/goic-params',
         'goic/tools/goic-optc',
         'goic/tools/goic-model',
+        'goic/tools/goic-trainmodel',
         'goic/tools/goic-perf',
         'goic/tools/goic-kfolds'
     ]
