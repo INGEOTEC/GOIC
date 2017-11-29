@@ -32,7 +32,7 @@ class Features:
                  channels='rgb',
                  correlation=False,
                  sample_size=10000,
-                 num_centers=300
+                 num_centers=300,
                  **kwargs):
 
         self.resize = resize
