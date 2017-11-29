@@ -322,7 +322,7 @@ class CommandLineModel(CommandLinePredict):
         L = []
         with open(self.get_output(), 'w') as fpt:
             for tw in item_iterator(self.data.test_set):
-                seq = model.sequence(tw[NAME])
+                seq = model.sequence(model.compute_features(tw[NAME]))
                 tw["text"] = " ".join(map(str, seq))
                 # tw["vecsize"] = svc.num_terms
                 L.append(tw)
