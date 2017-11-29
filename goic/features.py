@@ -32,8 +32,8 @@ class Features:
                  channels='rgb',
                  correlation=False,
                  sample_size=10000,
-                 num_centers=223,
-                 encoding='hist',
+                 num_centers=300,
+                 encoding='seq',
                  **kwargs):
 
         self.resize = resize
@@ -87,8 +87,8 @@ class Features:
 
     def sequence(self, veclist):
         seq = []
-        for vec in veclist:
-            c = np.argmin(self.model.transform(vec))
+        for dists in self.model.transform(veclist):
+            c = np.argmin(dists)
             seq.append(c)
 
         return np.array(seq, dtype=np.int32)
