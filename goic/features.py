@@ -32,8 +32,7 @@ class Features:
                  channels='rgb',
                  correlation=False,
                  sample_size=10000,
-                 num_centers=300,
-                 encoding='seq',
+                 num_centers=300
                  **kwargs):
 
         self.resize = resize
@@ -46,7 +45,6 @@ class Features:
         self.features = features
         self.channels = channels
         self.correlation = correlation
-        self.encoding = encoding
         self.train_features = {}  # a hack to avoid the training double processing of the whole dataset
 
         vectors = []
@@ -73,17 +71,9 @@ class Features:
 
         print("encoding our training vectors", file=sys.stderr)
         for filename, veclist in self.train_features.items():
-            self.train_features[filename] = self.encode(veclist)
+            self.train_features[filename] = self.hist(veclist)
 
         print("our feature module is fitted", file=sys.stderr)
-
-    def encode(self, veclist):
-        if self.encoding == 'hist':
-            return self.hist(veclist)
-        elif self.encoding == 'seq':
-            return self.sequence(veclist)
-        else:
-            raise Exception("Unknown feature encoding {0}".format(self.encoding))
 
     def sequence(self, veclist):
         seq = []
@@ -114,7 +104,7 @@ class Features:
 
             self.train_features = None  # if we reach this code we are beyond the training phase
 
-        return self.encode(self.compute_features(filename))
+        return self.hist(self.compute_features(filename))
 
     def graytorgb(self, im):
         w, h = im.shape
