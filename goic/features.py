@@ -87,8 +87,8 @@ class Features:
 
     def sequence(self, veclist):
         seq = []
-        for vec in veclist:
-            c = np.argmin(self.model.transform(vec))
+        for dists in self.model.transform(veclist):
+            c = np.argmin(dists)
             seq.append(c)
 
         return np.array(seq, dtype=np.int32)

@@ -318,11 +318,11 @@ class CommandLineModel(CommandLinePredict):
     def main(self, args=None):
         self.data = self.parser.parse_args(args=args)
         logging.basicConfig(level=self.data.verbose)
-        model, svc, le = load_pickle(self.data.model)
+        model = load_pickle(self.data.model)
         L = []
         with open(self.get_output(), 'w') as fpt:
             for tw in item_iterator(self.data.test_set):
-                tw["text"] = [x for x in model[tw[NAME]]]
+                tw["text"] = " ".join(map(str, model[tw[NAME]]))
                 # tw["vecsize"] = svc.num_terms
                 L.append(tw)
                 print(json.dumps(tw), file=fpt)
