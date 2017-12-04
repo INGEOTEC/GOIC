@@ -324,7 +324,7 @@ class CommandLineModel(CommandLinePredict):
                 for tw in item_iterator(self.data.test_set):
                     hist = model.hist(model.compute_features(tw[NAME]))
                     H = list(range(0, len(hist)))
-                    H.sort(by=lambda x: hist[x])
+                    H.sort(key=lambda x: hist[x])
                     tw["text"] = " ".join(map(str, H))
                     # tw["vecsize"] = svc.num_terms
                     L.append(tw)
