@@ -260,9 +260,6 @@ class CommandLinePredict(CommandLine):
 
         veclist, afflist = [], []
         for x in read_data(self.data.test_set):
-            # v, a = model.vectorize(x)
-            # veclist.append(v)
-            # afflist.append(a)
             v = model[x]
             veclist.append(v)
 
@@ -316,17 +313,29 @@ class CommandLineTrainModel(CommandLine):
 
 class CommandLineModel(CommandLinePredict):
     def main(self, args=None):
+        self.parser.add_argument("-w", "--sort-by-weight", dest="sort_by_weights", action='store_true', default=False,
+                                 help="Represents each image by the sequence that results of sort each bow by ")
         self.data = self.parser.parse_args(args=args)
         logging.basicConfig(level=self.data.verbose)
         model = load_pickle(self.data.model)
         L = []
         with open(self.get_output(), 'w') as fpt:
-            for tw in item_iterator(self.data.test_set):
-                seq = model.sequence(model.compute_features(tw[NAME]))
-                tw["text"] = " ".join(map(str, seq))
-                # tw["vecsize"] = svc.num_terms
-                L.append(tw)
-                print(json.dumps(tw), file=fpt)
+            if self.data.sort_by_weights:
+                for tw in item_iterator(self.data.test_set):
+                    hist = model.hist(model.compute_features(tw[NAME]))
+                    H = list(range(0, len(hist)))
+                    H.sort(by=lambda x: hist[x])
+                    tw["text"] = " ".join(map(str, H))
+                    # tw["vecsize"] = svc.num_terms
+                    L.append(tw)
+                    print(json.dumps(tw), file=fpt)
+            else:
+                for tw in item_iterator(self.data.test_set):
+                    seq = model.sequence(model.compute_features(tw[NAME]))
+                    tw["text"] = " ".join(map(str, seq))
+                    # tw["vecsize"] = svc.num_terms
+                    L.append(tw)
+                    print(json.dumps(tw), file=fpt)
 
         return L
 
